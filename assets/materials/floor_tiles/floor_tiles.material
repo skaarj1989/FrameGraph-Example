@@ -1,0 +1,33 @@
+{
+    "name": "FloorTiles",
+    "shadingModel": "DefaultLit",
+    "blendMode": "Opaque",
+    "samplers": [
+        {
+            "name": "t_Albedo",
+            "type": "sampler2D",
+            "path": "albedo.jpg"
+        },
+        {
+            "name": "t_Height",
+            "type": "sampler2D",
+            "path": "height.jpg"
+        },
+        {
+            "name": "t_Normal",
+            "type": "sampler2D",
+            "path": "normal.jpg"
+        },
+        {
+            "name": "t_Roughness",
+            "type": "sampler2D",
+            "path": "roughness.jpg"
+        },
+        {
+            "name": "t_AO",
+            "type": "sampler2D",
+            "path": "ao.jpg"
+        }
+    ],
+    "fragmentShader": "code.frag"
+}

@@ -1,0 +1,33 @@
+{
+    "name": "RustedIron",
+    "shadingModel": "DefaultLit",
+    "blendMode": "Opaque",
+    "samplers": [
+        {
+            "name": "t_Albedo",
+            "type": "sampler2D",
+            "path": "albedo.png"
+        },
+        {
+            "name": "t_Normal",
+            "type": "sampler2D",
+            "path": "normal.png"
+        },
+        {
+            "name": "t_Metallic",
+            "type": "sampler2D",
+            "path": "metallic.png"
+        },
+        {
+            "name": "t_Roughness",
+            "type": "sampler2D",
+            "path": "roughness.png"
+        },
+        {
+            "name": "t_AO",
+            "type": "sampler2D",
+            "path": "ao.png"
+        }
+    ],
+    "fragmentShader": "code.frag"
+}

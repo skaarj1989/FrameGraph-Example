@@ -1,0 +1,34 @@
+#ifndef _FRAME_BLOCK_GLSL_
+#define _FRAME_BLOCK_GLSL_
+
+struct Camera {
+  mat4 projection;
+  mat4 inversedProjection;
+  mat4 view;
+  mat4 inversedView;
+  float fov;
+  float near, far;
+  // Implicit padding, 4bytes
+};
+
+layout(binding = 0, std140) uniform FrameBlock {
+  float time;
+  float deltaTime;
+  uvec2 resolution;
+  Camera camera;
+  uint renderFeatures;
+}
+u_Frame;
+
+float getTime() { return u_Frame.time; }
+float getDeltaTime() { return u_Frame.deltaTime; }
+
+uvec2 getResolution() { return u_Frame.resolution; }
+vec2 getTexelSize() { return 1.0 / vec2(u_Frame.resolution); }
+
+const uint RenderFeature_Shadows = 1 << 1;
+const uint RenderFeature_SSAO = 1 << 2;
+
+bool hasRenderFeatures(uint f) { return (u_Frame.renderFeatures & f) == f; }
+
+#endif

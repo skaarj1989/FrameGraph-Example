@@ -1,0 +1,19 @@
+{
+    "name": "FrostedGlass",
+    "shadingModel": "DefaultLit",
+    "blendMode": "Transparent",
+    "cullMode": "None",
+    "samplers": [
+        {
+            "name": "t_Diffuse",
+            "type": "sampler2D",
+            "path": "diffuse.jpg"
+        },
+        {
+            "name": "t_Normal",
+            "type": "sampler2D",
+            "path": "normal.jpg"
+        }
+    ],
+    "fragmentShader": "code.frag"
+}

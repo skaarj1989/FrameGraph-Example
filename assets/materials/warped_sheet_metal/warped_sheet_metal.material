@@ -1,0 +1,38 @@
+{
+    "name": "WarpedSheetMetal",
+    "shadingModel": "DefaultLit",
+    "blendMode": "Masked",
+    "samplers": [
+        {
+            "name": "t_Albedo",
+            "type": "sampler2D",
+            "path": "albedo.png"
+        },
+        {
+            "name": "t_Height",
+            "type": "sampler2D",
+            "path": "height.png"
+        },
+        {
+            "name": "t_Normal",
+            "type": "sampler2D",
+            "path": "normal-ogl.png"
+        },
+        {
+            "name": "t_Metallic",
+            "type": "sampler2D",
+            "path": "metallic.png"
+        },
+        {
+            "name": "t_Roughness",
+            "type": "sampler2D",
+            "path": "roughness.png"
+        },
+        {
+            "name": "t_AO",
+            "type": "sampler2D",
+            "path": "ao.png"
+        }
+    ],
+    "fragmentShader": "code.frag"
+}

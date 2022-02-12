@@ -1,0 +1,222 @@
+#version 460 core
+
+#define DEBUG_HEATMAP 1
+#define DEBUG_DEPTH 2
+
+layout(local_size_x = TILE_SIZE, local_size_y = TILE_SIZE) in;
+
+#include <Resources/FrameBlock.glsl>
+
+layout(binding = 0) uniform sampler2D t_SceneDepth;
+
+// [startOffset, lightCount]
+// .rg = opaque geometry
+// .ba = translucent geometry
+layout(binding = 0, rgba32ui) uniform restrict writeonly uimage2D i_LightGrid;
+
+#include <Lib/Light.glsl>
+_DECLARE_LIGHT_BUFFER(0, g_LightBuffer);
+
+#include <Lib/Frustum.glsl>
+_DECLARE_FRUSTUMS(1, restrict readonly, g_GridFrustums);
+
+layout(binding = 2, std430) buffer LightIndexCounter {
+  // .x = opaque geometry
+  // .y = translucent geometry
+  uvec2 g_LightIndexCounter;
+};
+layout(binding = 3, std430) restrict writeonly buffer LightIndexList {
+  // .x = opaque geometry
+  // .y = translucent geometry
+  uvec2 g_LightIndexList[]; // Indices to g_LightBuffer
+};
+
+#if _DEBUG_OUTPUT
+layout(binding = 1, rgba8) uniform restrict writeonly image2D i_DebugMap;
+#endif
+
+#include <Lib/Depth.glsl>
+#include <Lib/FrustumCulling.glsl>
+#include <Lib/HeatMap.glsl>
+
+//
+// Shared data (per group/tile):
+//
+
+struct TileData {
+  uint minDepthInt;
+  uint maxDepthInt;
+  Frustum frustum;
+};
+shared TileData tileData;
+
+struct LightBucket {
+  uint lightCount;
+  uint startOffset;
+  uint lightList[MAX_NUM_LIGHTS];
+};
+shared LightBucket opaqueGeometry;
+shared LightBucket translucentGeometry;
+
+// 'shared' qualifier for parameter works on NVIDIA drivers.
+void _appendLight(uint lightIndex, shared inout LightBucket bucket) {
+  uint index = atomicAdd(bucket.lightCount, 1);
+  if (index < MAX_NUM_LIGHTS) bucket.lightList[index] = lightIndex;
+}
+
+void main() {
+  // Example: Screen size = 1280x720, TILE_SIZE = 16:
+  // gl_NumWorkGroups = [80 x 45 x 1] = 3600 frustums
+  // gl_LocalInvocationID = [0..15 x 0..15 x 0]
+  // gl_LocalInvocationIndex = 16x16 = [0..255]
+  // gl_WorkGroupID = [0..79 x 0..44 x 0]
+  // gl_GlobalInvocationID = [0..1279 x 0..719 x 0]
+  // gl_WorkGroupSize = TILE_SIZE
+  const uvec2 numThreadGroups = uvec2(gl_NumWorkGroups.xy);
+  const uvec2 groupThreadId = uvec2(gl_LocalInvocationID.xy);
+  const uint groupIndex = gl_LocalInvocationIndex;
+  const uvec2 tileId = uvec2(gl_WorkGroupID.xy);
+
+  if (groupIndex == 0) {
+    tileData.minDepthInt = 0xFFFFFFFF;
+    tileData.maxDepthInt = 0;
+    const uint tileIndex = flatten2D(tileId, numThreadGroups.x);
+    tileData.frustum = g_GridFrustums[tileIndex];
+
+    opaqueGeometry.lightCount = 0;
+    translucentGeometry.lightCount = 0;
+  }
+
+  // Each thread indicates a single pixel
+  const ivec2 screenCoord = ivec2(gl_GlobalInvocationID.xy);
+  const ivec2 depthMapSize = textureSize(t_SceneDepth, 0);
+  if (any(greaterThanEqual(screenCoord, depthMapSize))) return;
+
+  const float depth = fetchDepth(t_SceneDepth, screenCoord);
+  barrier();
+
+  const uint depthInt = floatBitsToUint(depth);
+  atomicMin(tileData.minDepthInt, depthInt);
+  atomicMax(tileData.maxDepthInt, depthInt);
+
+  barrier();
+
+  const float minDepth = uintBitsToFloat(tileData.minDepthInt);
+  const float maxDepth = uintBitsToFloat(tileData.maxDepthInt);
+
+  const float minDepthVS = clipToView(vec4(0.0, 0.0, minDepth, 1.0)).z;
+  const float maxDepthVS = clipToView(vec4(0.0, 0.0, maxDepth, 1.0)).z;
+  const float nearClipVS = clipToView(vec4(0.0, 0.0, NEAR_CLIP_PLANE, 1.0)).z;
+
+  const Plane minPlane = {vec3(0.0, 0.0, -1.0), minDepthVS};
+
+  const uint kStride = TILE_SIZE * TILE_SIZE;
+  for (uint i = groupIndex; i < g_LightBuffer.numLights; i += kStride) {
+    const Light light = g_LightBuffer.data[i];
+    const float lightRange = _getLightRange(light);
+
+    switch (light.type) {
+    case LightType_Directional: {
+      _appendLight(i, opaqueGeometry);
+      _appendLight(i, translucentGeometry);
+    } break;
+    case LightType_Spot: {
+      // https://simoncoenen.com/blog/programming/graphics/SpotlightCulling
+#if 1
+      const float halfAngleCos = cos(light.outerConeAngle * 0.5);
+      const float sphereRadius =
+        lightRange * 0.5 / (halfAngleCos * halfAngleCos);
+      const vec3 sphereCenter =
+        light.position.xyz + light.direction.xyz * sphereRadius;
+      const Sphere sphere = {sphereCenter, sphereRadius};
+      if (sphereInsideFrustum(sphere, tileData.frustum, nearClipVS,
+                              maxDepthVS)) {
+        _appendLight(i, translucentGeometry);
+        if (!sphereBehindPlane(sphere, minPlane)) {
+          _appendLight(i, opaqueGeometry);
+        }
+      }
+#else
+      // FIXME: accuracy problems, corrupted visuals!
+      const float coneRadius = tan(light.outerConeAngle) * lightRange;
+      const Cone cone = {light.position.xyz, lightRange, light.direction.xyz,
+                         coneRadius};
+      if (coneInsideFrustum(cone, tileData.frustum, nearClipVS, maxDepthVS)) {
+        _appendLight(i, translucentGeometry);
+        if (!coneBehindPlane(cone, minPlane)) {
+          _appendLight(i, opaqueGeometry);
+        }
+      }
+#endif
+    } break;
+    case LightType_Point: {
+      const Sphere sphere = {light.position.xyz, lightRange};
+      if (sphereInsideFrustum(sphere, tileData.frustum, nearClipVS,
+                              maxDepthVS)) {
+        _appendLight(i, translucentGeometry);
+        if (!sphereBehindPlane(sphere, minPlane)) {
+          _appendLight(i, opaqueGeometry);
+        }
+      }
+    } break;
+    }
+  }
+
+  barrier();
+
+  //
+  // Update global memory with visible light buffer:
+  //
+
+  if (groupIndex == 0) {
+    opaqueGeometry.startOffset =
+      atomicAdd(g_LightIndexCounter.x, opaqueGeometry.lightCount);
+    translucentGeometry.startOffset =
+      atomicAdd(g_LightIndexCounter.y, translucentGeometry.lightCount);
+    imageStore(i_LightGrid, ivec2(tileId),
+               uvec4(opaqueGeometry.startOffset, opaqueGeometry.lightCount,
+                     translucentGeometry.startOffset,
+                     translucentGeometry.lightCount));
+  }
+
+  barrier();
+
+  for (uint i = groupIndex; i < opaqueGeometry.lightCount; i += kStride) {
+    g_LightIndexList[opaqueGeometry.startOffset + i].x =
+      opaqueGeometry.lightList[i];
+  }
+  for (uint i = groupIndex; i < translucentGeometry.lightCount; i += kStride) {
+    g_LightIndexList[translucentGeometry.startOffset + i].y =
+      translucentGeometry.lightList[i];
+  }
+
+  //
+  // Debug output:
+  //
+
+#if _DEBUG_OUTPUT
+  const vec3 kBorderColor = vec3(0.0);
+  // Borders
+  if (groupThreadId.x == 0 || groupThreadId.y == 0) {
+    imageStore(i_DebugMap, screenCoord, vec4(kBorderColor, 0.9));
+  } else if (groupThreadId.x < 1 || groupThreadId.y < 1) {
+    imageStore(i_DebugMap, screenCoord, vec4(kBorderColor, 0.5));
+  } else {
+#  if _DEBUG_OUTPUT == DEBUG_HEATMAP
+    // Light heatmap for opaque geometry
+    if (opaqueGeometry.lightCount > 0) {
+      const vec3 heat = calculateHeat(0.0, 50.0, opaqueGeometry.lightCount);
+      imageStore(i_DebugMap, screenCoord, vec4(heat, 1.0));
+    } else {
+      const vec3 kNoLightsInTileColor = vec3(0.0);
+      imageStore(i_DebugMap, screenCoord, vec4(kNoLightsInTileColor, 1.0));
+    }
+#  elif _DEBUG_OUTPUT == DEBUG_DEPTH
+    const float averageDepth =
+      mix(linearizeDepth(minDepth) / u_Frame.camera.far,
+          linearizeDepth(maxDepth) / u_Frame.camera.far, 0.5);
+    imageStore(i_DebugMap, screenCoord, vec4(vec3(averageDepth), 1.0));
+#  endif
+  }
+#endif
+}

@@ -1,0 +1,10 @@
+[submodule "extern/FrameGraph"]
+	path = extern/FrameGraph
+	url = git@github.com:skaarj1989/FrameGraph.git
+[submodule "extern/glad"]
+	path = extern/glad
+	url = git@github.com:skaarj1989/glad.git
+	branch = gl
+[submodule "extern/Tracy"]
+	path = extern/Tracy
+	url = https://github.com/wolfpld/tracy.git
