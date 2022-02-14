@@ -5,6 +5,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "spdlog/spdlog.h"
 
+#include <numeric>
+
 #include "Tracy.hpp"
 #include "TracyOpenGL.hpp"
 
@@ -349,6 +351,7 @@ RenderContext &RenderContext::destroy(Buffer &buffer) {
 RenderContext &RenderContext::destroy(Texture &texture) {
   if (texture) {
     glDeleteTextures(1, &texture.m_id);
+    if (texture.m_view != GL_NONE) glDeleteTextures(1, &texture.m_view);
     texture = {};
   }
   return *this;
@@ -377,32 +380,19 @@ GLuint RenderContext::beginRendering(const RenderingInfo &renderingInfo) {
   GLuint framebuffer;
   glCreateFramebuffers(1, &framebuffer);
   if (renderingInfo.depthAttachment.has_value()) {
-    const auto &[image, mipLevel, maybeLayer, _] =
-      *renderingInfo.depthAttachment;
-    if (maybeLayer.has_value()) {
-      glNamedFramebufferTextureLayer(framebuffer, GL_DEPTH_ATTACHMENT, image,
-                                     mipLevel, *maybeLayer);
-    } else {
-      glNamedFramebufferTexture(framebuffer, GL_DEPTH_ATTACHMENT, image,
-                                mipLevel);
-    }
+    _attachTexture(framebuffer, GL_DEPTH_ATTACHMENT,
+                   *renderingInfo.depthAttachment);
   }
-  std::vector<GLenum> buffers;
-  for (int32_t i{0}; auto &attachment : renderingInfo.colorAttachments) {
-    const auto buffer = GL_COLOR_ATTACHMENT0 + i;
-    if (attachment.layer.has_value()) {
-      glNamedFramebufferTextureLayer(framebuffer, buffer, attachment.image,
-                                     attachment.mipLevel, *attachment.layer);
-    } else {
-      glNamedFramebufferTexture(framebuffer, buffer, attachment.image,
-                                attachment.mipLevel);
-    }
-    buffers.push_back(buffer);
-    ++i;
+  for (uint8_t i{0}; i < renderingInfo.colorAttachments.size(); ++i) {
+    _attachTexture(framebuffer, GL_COLOR_ATTACHMENT0 + i,
+                   renderingInfo.colorAttachments[i]);
   }
-  if (not buffers.empty())
-    glNamedFramebufferDrawBuffers(framebuffer, buffers.size(), buffers.data());
-
+  if (const auto n = renderingInfo.colorAttachments.size(); n > 0) {
+    std::vector<GLenum> colorBuffers(n);
+    std::iota(colorBuffers.begin(), colorBuffers.end(), GL_COLOR_ATTACHMENT0);
+    glNamedFramebufferDrawBuffers(framebuffer, colorBuffers.size(),
+                                  colorBuffers.data());
+  }
 #ifdef _DEBUG
   const auto status =
     glCheckNamedFramebufferStatus(framebuffer, GL_DRAW_FRAMEBUFFER);
@@ -475,7 +465,6 @@ RenderContext &RenderContext::setGraphicsPipeline(const GraphicsPipeline &gp) {
     _setCullMode(state.cullMode);
     _setPolygonOffset(state.polygonOffset);
     _setDepthClamp(state.depthClampEnable);
-    _setLineWidth(state.lineWidth);
     _setScissorTest(state.scissorTest);
   }
 
@@ -789,6 +778,46 @@ Texture RenderContext::_createImmutableTexture(Extent2D extent, uint32_t depth,
   return Texture{id, target, pixelFormat, extent, numMipLevels, numLayers};
 }
 
+void RenderContext::_createFaceView(Texture &cubeMap, GLuint mipLevel,
+                                    GLuint layer, GLuint face) {
+  assert(cubeMap.m_type == GL_TEXTURE_CUBE_MAP or
+         cubeMap.m_type == GL_TEXTURE_CUBE_MAP_ARRAY);
+
+  if (cubeMap.m_view != GL_NONE) glDeleteTextures(1, &cubeMap.m_view);
+  glGenTextures(1, &cubeMap.m_view);
+
+  glTextureView(cubeMap.m_view, GL_TEXTURE_2D, cubeMap,
+                static_cast<GLenum>(cubeMap.m_pixelFormat), mipLevel, 1,
+                (layer * 6) + face, 1);
+}
+
+void RenderContext::_attachTexture(GLuint framebuffer, GLenum attachment,
+                                   const AttachmentInfo &info) {
+  const auto &[image, mipLevel, maybeLayer, maybeFace, _] = info;
+
+  switch (image.m_type) {
+  case GL_TEXTURE_CUBE_MAP:
+  case GL_TEXTURE_CUBE_MAP_ARRAY:
+    _createFaceView(image, mipLevel, maybeLayer.value_or(0),
+                    maybeFace.value_or(0));
+    glNamedFramebufferTexture(framebuffer, attachment, image.m_view, 0);
+    break;
+
+  case GL_TEXTURE_2D:
+    glNamedFramebufferTexture(framebuffer, attachment, image, mipLevel);
+    break;
+
+  case GL_TEXTURE_2D_ARRAY:
+    assert(maybeLayer.has_value());
+    glNamedFramebufferTextureLayer(framebuffer, attachment, image, mipLevel,
+                                   maybeLayer.value_or(0));
+    break;
+
+  default:
+    assert(false);
+  }
+}
+
 GLuint RenderContext::_createShader(GLenum type, const std::string_view code) {
   auto id = glCreateShader(type);
   const GLchar *strings{code.data()};
@@ -918,13 +947,6 @@ void RenderContext::_setDepthClamp(bool enabled) {
   if (enabled != current) {
     enabled ? glEnable(GL_DEPTH_CLAMP) : glDisable(GL_DEPTH_CLAMP);
     current = enabled;
-  }
-}
-void RenderContext::_setLineWidth(float f) {
-  auto &current = m_currentPipeline.m_rasterizerState.lineWidth;
-  if (f != current) {
-    glLineWidth(f);
-    current = f;
   }
 }
 void RenderContext::_setScissorTest(bool enabled) {

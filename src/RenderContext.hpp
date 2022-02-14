@@ -26,8 +26,9 @@ using ClearValue = std::variant<glm::vec4, float>;
 
 struct AttachmentInfo {
   Texture &image;
-  int32_t mipLevel{0};
-  std::optional<int32_t> layer{};
+  uint32_t mipLevel{0};
+  std::optional<uint32_t> layer{};
+  std::optional<uint32_t> face{};
   std::optional<ClearValue> clearValue{};
 };
 struct RenderingInfo {
@@ -171,7 +172,7 @@ public:
                       OptionalReference<const IndexBuffer>,
                       const GeometryInfo &, uint32_t numInstances = 1);
 
-private:
+public:
   void _setupDebugCallback();
   static void _debugCallback(GLenum source, GLenum type, GLuint id,
                              GLenum severity, GLsizei length,
@@ -183,6 +184,11 @@ private:
                                                 PixelFormat, uint32_t numFaces,
                                                 uint32_t numMipLevels,
                                                 uint32_t numLayers);
+
+  void _createFaceView(Texture &cubeMap, GLuint mipLevel, GLuint layer,
+                       GLuint face);
+  void _attachTexture(GLuint framebuffer, GLenum attachment,
+                      const AttachmentInfo &);
 
   [[nodiscard]] GLuint _createShader(GLenum type, const std::string_view code);
   [[nodiscard]] GLuint
@@ -200,7 +206,6 @@ private:
   void _setPolygonOffset(std::optional<PolygonOffset>);
   void _setCullMode(CullMode);
   void _setDepthClamp(bool enabled);
-  void _setLineWidth(float);
   void _setScissorTest(bool enabled);
 
   void _setBlendState(GLuint index, const BlendState &);

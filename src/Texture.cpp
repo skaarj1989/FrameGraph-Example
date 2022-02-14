@@ -7,9 +7,10 @@
 //
 
 Texture::Texture(Texture &&other) noexcept
-    : m_id{other.m_id}, m_type{other.m_type}, m_extent{other.m_extent},
-      m_depth{other.m_depth}, m_numMipLevels{other.m_numMipLevels},
-      m_numLayers{other.m_numLayers}, m_pixelFormat{other.m_pixelFormat} {
+    : m_id{other.m_id}, m_type{other.m_type}, m_view{other.m_view},
+      m_extent{other.m_extent}, m_depth{other.m_depth},
+      m_numMipLevels{other.m_numMipLevels}, m_numLayers{other.m_numLayers},
+      m_pixelFormat{other.m_pixelFormat} {
   memset(&other, 0, sizeof(Texture));
 }
 Texture::~Texture() {

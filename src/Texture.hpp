@@ -69,6 +69,8 @@ private:
   GLuint m_id{GL_NONE};
   GLenum m_type{GL_NONE};
 
+  GLuint m_view{GL_NONE};
+
   Extent2D m_extent{0u};
   uint32_t m_depth{0u};
   uint32_t m_numMipLevels{1u};

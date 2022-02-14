@@ -80,7 +80,6 @@ struct RasterizerState {
   CullMode cullMode{CullMode::Back};
   std::optional<PolygonOffset> polygonOffset;
   bool depthClampEnable{false};
-  float lineWidth{1.0f};
   bool scissorTest{false};
 
   auto operator<=>(const RasterizerState &) const = default;
