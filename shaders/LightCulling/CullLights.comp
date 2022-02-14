@@ -58,11 +58,11 @@ struct LightBucket {
 shared LightBucket opaqueGeometry;
 shared LightBucket translucentGeometry;
 
-// 'shared' qualifier for parameter works on NVIDIA drivers.
-void _appendLight(uint lightIndex, shared inout LightBucket bucket) {
-  uint index = atomicAdd(bucket.lightCount, 1);
-  if (index < MAX_NUM_LIGHTS) bucket.lightList[index] = lightIndex;
-}
+#define _APPEND_LIGHT(lightIndex, bucket)                                      \
+  {                                                                            \
+    uint index = atomicAdd(bucket.lightCount, 1);                              \
+    if (index < MAX_NUM_LIGHTS) bucket.lightList[index] = lightIndex;          \
+  }
 
 void main() {
   // Example: Screen size = 1280x720, TILE_SIZE = 16:
@@ -117,8 +117,8 @@ void main() {
 
     switch (light.type) {
     case LightType_Directional: {
-      _appendLight(i, opaqueGeometry);
-      _appendLight(i, translucentGeometry);
+      _APPEND_LIGHT(i, opaqueGeometry);
+      _APPEND_LIGHT(i, translucentGeometry);
     } break;
     case LightType_Spot: {
       // https://simoncoenen.com/blog/programming/graphics/SpotlightCulling
@@ -131,9 +131,9 @@ void main() {
       const Sphere sphere = {sphereCenter, sphereRadius};
       if (sphereInsideFrustum(sphere, tileData.frustum, nearClipVS,
                               maxDepthVS)) {
-        _appendLight(i, translucentGeometry);
+        _APPEND_LIGHT(i, translucentGeometry);
         if (!sphereBehindPlane(sphere, minPlane)) {
-          _appendLight(i, opaqueGeometry);
+          _APPEND_LIGHT(i, opaqueGeometry);
         }
       }
 #else
@@ -142,9 +142,9 @@ void main() {
       const Cone cone = {light.position.xyz, lightRange, light.direction.xyz,
                          coneRadius};
       if (coneInsideFrustum(cone, tileData.frustum, nearClipVS, maxDepthVS)) {
-        _appendLight(i, translucentGeometry);
+        _APPEND_LIGHT(i, translucentGeometry);
         if (!coneBehindPlane(cone, minPlane)) {
-          _appendLight(i, opaqueGeometry);
+          _APPEND_LIGHT(i, opaqueGeometry);
         }
       }
 #endif
@@ -153,9 +153,9 @@ void main() {
       const Sphere sphere = {light.position.xyz, lightRange};
       if (sphereInsideFrustum(sphere, tileData.frustum, nearClipVS,
                               maxDepthVS)) {
-        _appendLight(i, translucentGeometry);
+        _APPEND_LIGHT(i, translucentGeometry);
         if (!sphereBehindPlane(sphere, minPlane)) {
-          _appendLight(i, opaqueGeometry);
+          _APPEND_LIGHT(i, opaqueGeometry);
         }
       }
     } break;

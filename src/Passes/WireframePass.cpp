@@ -81,11 +81,9 @@ WireframePass::_createBasePassPipeline(const VertexFormat &vertexFormat,
       .cullMode = CullMode::Back,
       .polygonOffset =
         PolygonOffset{
-          .factor = -0.01f,
-          .units = -2.0f,
+          .factor = 0.0f,
+          .units = -1000.0f,
         },
-      .depthClampEnable = false,
-      .lineWidth = 2.0f,
       .scissorTest = false,
     })
     .setVertexArray(vao)

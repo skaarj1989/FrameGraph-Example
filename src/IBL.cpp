@@ -86,7 +86,7 @@ Texture IBL::generateIrradiance(const Texture &cubemap) {
       .area = {.extent = {kSize, kSize}},
       .colorAttachments = {AttachmentInfo{
         .image = irradiance,
-        .layer = face,
+        .face = face,
       }},
     };
     const auto framebuffer = m_renderContext.beginRendering(renderingInfo);
@@ -126,7 +126,7 @@ Texture IBL::prefilterEnvMap(const Texture &cubemap) {
         .colorAttachments = {AttachmentInfo{
           .image = prefilteredEnvMap,
           .mipLevel = level,
-          .layer = face,
+          .face = face,
         }},
       };
       const auto framebuffer = m_renderContext.beginRendering(renderingInfo);

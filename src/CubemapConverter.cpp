@@ -60,7 +60,7 @@ CubemapConverter::equirectangularToCubemap(const Texture &equirectangular) {
       .area = {.extent = {size, size}},
       .colorAttachments = {AttachmentInfo{
         .image = cubemap,
-        .layer = face,
+        .face = face,
       }},
     };
     const auto framebuffer = m_renderContext.beginRendering(renderingInfo);
