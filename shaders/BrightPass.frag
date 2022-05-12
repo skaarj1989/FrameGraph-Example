@@ -22,7 +22,7 @@ vec3 prefilterFireflies() {
   float weightSum = 0;
   for (uint i = 0; i < 5; ++i) {
     const vec3 c =
-      textureOffset(t_SceneColor, v_TexCoord, ivec2(kOffsets[i] * 2.0)).rgb;
+      texture(t_SceneColor, v_TexCoord + (texelSize * kOffsets[i] * 2.0)).rgb;
     const float w = 1.0 / (getLuminance(c) + 1.0);
     color += c * w;
     weightSum += w;
