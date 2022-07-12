@@ -103,6 +103,8 @@ struct SamplerInfo {
   SamplerAddressMode addressModeT{SamplerAddressMode::Repeat};
   SamplerAddressMode addressModeR{SamplerAddressMode::Repeat};
 
+  float maxAnisotropy{1.0f};
+
   std::optional<CompareOp> compareOp{};
   glm::vec4 borderColor{0.0f};
 };

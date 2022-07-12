@@ -56,6 +56,7 @@ std::shared_ptr<Texture> loadTexture(const std::filesystem::path &p,
                              .minFilter = TexelFilter::Linear,
                              .mipmapMode = MipmapMode::Linear,
                              .magFilter = TexelFilter::Linear,
+                             .maxAnisotropy = 16.0f,
                            });
   stbi_image_free(pixels);
 

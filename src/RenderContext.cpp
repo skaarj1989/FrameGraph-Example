@@ -237,6 +237,10 @@ GLuint RenderContext::createSampler(const SamplerInfo &samplerInfo) {
                       static_cast<GLenum>(samplerInfo.addressModeT));
   glSamplerParameteri(sampler, GL_TEXTURE_WRAP_R,
                       static_cast<GLenum>(samplerInfo.addressModeR));
+
+  glSamplerParameterf(sampler, GL_TEXTURE_MAX_ANISOTROPY,
+                      samplerInfo.maxAnisotropy);
+
   if (samplerInfo.compareOp.has_value()) {
     glSamplerParameteri(sampler, GL_TEXTURE_COMPARE_MODE,
                         GL_COMPARE_REF_TO_TEXTURE);
