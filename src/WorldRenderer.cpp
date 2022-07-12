@@ -4,6 +4,7 @@
 #include "fg/Blackboard.hpp"
 #include "FrameGraphHelper.hpp"
 
+#include "FrameData.hpp"
 #include "BRDF.hpp"
 #include "GlobalLightProbeData.hpp"
 #include "GBufferData.hpp"
@@ -241,12 +242,13 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
   importLightProbe(fg, blackboard, m_globalLightProbe);
 
   // FrameBlock is persistently bound to Uniform binding at index 0
-  _uploadFrameBlock(fg, {
-                          .deltaTime = deltaTime,
-                          .resolution = resolution,
-                          .camera = camera,
-                          .features = settings.renderFeatures,
-                        });
+  _uploadFrameBlock(fg, blackboard,
+                    {
+                      .deltaTime = deltaTime,
+                      .resolution = resolution,
+                      .camera = camera,
+                      .features = settings.renderFeatures,
+                    });
 
   auto visibleLights = getVisibleLights(lights, camera.getFrustum());
 
@@ -306,7 +308,7 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
     sceneColor.ldr = m_wireframePass.addGeometryPass(
       fg, blackboard, sceneColor.ldr, camera, visibleRenderables);
   }
-  const auto antiAliased = m_fxaa.addPass(fg, sceneColor.ldr);
+  const auto antiAliased = m_fxaa.addPass(fg, blackboard, sceneColor.ldr);
   if (settings.renderFeatures & RenderFeature_FXAA)
     sceneColor.ldr = antiAliased;
 
@@ -381,20 +383,18 @@ void WorldRenderer::_setupPipelines() {
 }
 
 void WorldRenderer::_uploadFrameBlock(FrameGraph &fg,
+                                      FrameGraphBlackboard &blackboard,
                                       const FrameInfo &frameInfo) {
-  struct Data {
-    FrameGraphResource output;
-  };
-  fg.addCallbackPass<Data>(
+  blackboard.add<FrameData>() = fg.addCallbackPass<FrameData>(
     "UploadFrameBlock",
-    [&](FrameGraph::Builder &builder, Data &data) {
-      data.output = builder.create<FrameGraphBuffer>(
+    [&](FrameGraph::Builder &builder, FrameData &data) {
+      data.frameBlock = builder.create<FrameGraphBuffer>(
         "FrameBlock", {.size = sizeof(GPUFrameBlock)});
-      data.output = builder.write(data.output);
+      data.frameBlock = builder.write(data.frameBlock);
 
       builder.setSideEffect();
     },
-    [=](const Data &data, FrameGraphPassResources &resources, void *ctx) {
+    [=](const FrameData &data, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("UploadFrameBlock");
       TracyGpuZone("UploadFrameBlock");
 
@@ -405,10 +405,9 @@ void WorldRenderer::_uploadFrameBlock(FrameGraph &fg,
         .camera = GPUCamera{frameInfo.camera},
         .renderFeatures = frameInfo.features,
       };
-      auto &buffer = getBuffer(resources, data.output);
-      static_cast<RenderContext *>(ctx)
-        ->upload(buffer, 0, sizeof(GPUFrameBlock), &frameBlock)
-        .bindUniformBuffer(0, buffer);
+      static_cast<RenderContext *>(ctx)->upload(
+        getBuffer(resources, data.frameBlock), 0, sizeof(GPUFrameBlock),
+        &frameBlock);
     });
 }
 
@@ -447,6 +446,8 @@ FrameGraphResource WorldRenderer::_addColor(FrameGraph &fg,
 }
 void WorldRenderer::_present(FrameGraph &fg, FrameGraphBlackboard &blackboard,
                              OutputMode outputMode) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   enum Mode_ {
     Mode_Discard = -1,
     Mode_Default,
@@ -533,6 +534,7 @@ void WorldRenderer::_present(FrameGraph &fg, FrameGraphBlackboard &blackboard,
   fg.addCallbackPass(
     "Present",
     [&](FrameGraph::Builder &builder, auto &) {
+      builder.read(frameBlock);
       if (mode != Mode_Discard) builder.read(output);
       builder.setSideEffect();
     },
@@ -546,6 +548,7 @@ void WorldRenderer::_present(FrameGraph &fg, FrameGraphBlackboard &blackboard,
       rc.beginRendering({.extent = extent}, glm::vec4{0.0f});
       if (mode != Mode_Discard) {
         rc.setGraphicsPipeline(m_blitPipeline)
+          .bindUniformBuffer(0, getBuffer(resources, frameBlock))
           .bindTexture(0, getTexture(resources, output))
           .setUniform1ui("u_Mode", mode)
           .drawFullScreenTriangle();

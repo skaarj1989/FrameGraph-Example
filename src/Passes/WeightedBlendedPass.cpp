@@ -6,6 +6,7 @@
 #include "../FrameGraphTexture.hpp"
 #include "../FrameGraphBuffer.hpp"
 
+#include "../FrameData.hpp"
 #include "../BRDF.hpp"
 #include "../GlobalLightProbeData.hpp"
 #include "../LightsData.hpp"
@@ -34,6 +35,8 @@ void WeightedBlendedPass::addPass(FrameGraph &fg,
                                   FrameGraphBlackboard &blackboard,
                                   const PerspectiveCamera &camera,
                                   std::span<const Renderable *> renderables) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   const auto &gBuffer = blackboard.get<GBufferData>();
   const auto extent = fg.getDescriptor<FrameGraphTexture>(gBuffer.depth).extent;
 
@@ -49,6 +52,8 @@ void WeightedBlendedPass::addPass(FrameGraph &fg,
     fg.addCallbackPass<WeightedBlendedData>(
       "WeightedBlended OIT",
       [&](FrameGraph::Builder &builder, WeightedBlendedData &data) {
+        builder.read(frameBlock);
+
         builder.read(gBuffer.depth);
 
         builder.read(brdf.lut);
@@ -95,7 +100,9 @@ void WeightedBlendedPass::addPass(FrameGraph &fg,
         };
         auto &rc = *static_cast<RenderContext *>(ctx);
         const auto framebuffer = rc.beginRendering(renderingInfo);
-        rc.bindTexture(0, getTexture(resources, gBuffer.depth))
+        rc.bindUniformBuffer(0, getBuffer(resources, frameBlock))
+
+          .bindTexture(0, getTexture(resources, gBuffer.depth))
 
           .bindTexture(1, getTexture(resources, brdf.lut))
           .bindTexture(2, getTexture(resources, globalLightProbe.diffuse))

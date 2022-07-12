@@ -5,6 +5,7 @@
 #include "../FrameGraphHelper.hpp"
 #include "../FrameGraphTexture.hpp"
 
+#include "../FrameData.hpp"
 #include "../GBufferData.hpp"
 
 #include "../ShaderCodeBuilder.hpp"
@@ -39,6 +40,8 @@ FrameGraphResource SkyboxPass::addPass(FrameGraph &fg,
                                        Texture *cubemap) {
   assert(cubemap and *cubemap);
 
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   const auto &gBuffer = blackboard.get<GBufferData>();
   const auto extent = fg.getDescriptor<FrameGraphTexture>(target).extent;
 
@@ -47,6 +50,7 @@ FrameGraphResource SkyboxPass::addPass(FrameGraph &fg,
   fg.addCallbackPass(
     "Skybox Pass",
     [&](FrameGraph::Builder &builder, auto &) {
+      builder.read(frameBlock);
       builder.read(gBuffer.depth);
       builder.read(skybox);
 
@@ -69,6 +73,7 @@ FrameGraphResource SkyboxPass::addPass(FrameGraph &fg,
       auto &rc = *static_cast<RenderContext *>(ctx);
       const auto framebuffer = rc.beginRendering(renderingInfo);
       rc.setGraphicsPipeline(m_pipeline)
+        .bindUniformBuffer(0, getBuffer(resources, frameBlock))
         .bindTexture(0, getTexture(resources, skybox))
         .drawFullScreenTriangle()
         .endRendering(framebuffer);

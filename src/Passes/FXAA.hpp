@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fg/FrameGraphResource.hpp"
+#include "fg/Fwd.hpp"
 #include "../RenderContext.hpp"
 
 class FrameGraph;
@@ -10,7 +10,7 @@ public:
   explicit FXAA(RenderContext &);
   ~FXAA();
 
-  [[nodiscard]] FrameGraphResource addPass(FrameGraph &,
+  [[nodiscard]] FrameGraphResource addPass(FrameGraph &, FrameGraphBlackboard &,
                                            FrameGraphResource input);
 
 private:

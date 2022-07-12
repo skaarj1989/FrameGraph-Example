@@ -100,7 +100,8 @@ private:
     const PerspectiveCamera &camera;
     uint32_t features;
   };
-  void _uploadFrameBlock(FrameGraph &, const FrameInfo &);
+  void _uploadFrameBlock(FrameGraph &, FrameGraphBlackboard &,
+                         const FrameInfo &);
 
   [[nodiscard]] FrameGraphResource
   _addColor(FrameGraph &, FrameGraphResource target, FrameGraphResource source);

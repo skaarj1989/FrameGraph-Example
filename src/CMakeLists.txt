@@ -49,6 +49,7 @@ add_executable(
   "FrameGraphHelper.cpp"
 
   # -- PassData:
+  "FrameData.hpp"
   "BRDF.hpp"
   "GlobalLightProbeData.hpp"
   "GBufferData.hpp"

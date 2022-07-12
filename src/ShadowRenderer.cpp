@@ -6,6 +6,7 @@
 #include "FrameGraphTexture.hpp"
 #include "FrameGraphBuffer.hpp"
 
+#include "FrameData.hpp"
 #include "GBufferData.hpp"
 #include "ShadowMapData.hpp"
 
@@ -162,12 +163,14 @@ void ShadowRenderer::buildCascadedShadowMaps(
 
 FrameGraphResource ShadowRenderer::visualizeCascades(
   FrameGraph &fg, FrameGraphBlackboard &blackboard, FrameGraphResource target) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
   const auto depth = blackboard.get<GBufferData>().depth;
   const auto cascades = blackboard.get<ShadowMapData>().viewProjMatrices;
 
   fg.addCallbackPass(
     "VisualizeCascades",
     [&](FrameGraph::Builder &builder, auto &) {
+      builder.read(frameBlock);
       builder.read(depth);
       builder.read(cascades);
 
@@ -188,6 +191,7 @@ FrameGraphResource ShadowRenderer::visualizeCascades(
       auto &rc = *static_cast<RenderContext *>(ctx);
       const auto framebuffer = rc.beginRendering(renderingInfo);
       rc.setGraphicsPipeline(m_debugPipeline)
+        .bindUniformBuffer(0, getBuffer(resources, frameBlock))
         .bindTexture(0, getTexture(resources, depth))
         .bindUniformBuffer(1, getBuffer(resources, cascades))
         .drawFullScreenTriangle()

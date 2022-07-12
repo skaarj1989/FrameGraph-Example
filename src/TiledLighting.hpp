@@ -16,8 +16,10 @@ public:
 private:
   void _setupPipelines();
 
-  [[nodiscard]] FrameGraphResource
-  _buildFrustums(FrameGraph &, uint32_t numFrustums, glm::uvec2 numGroups);
+  [[nodiscard]] FrameGraphResource _buildFrustums(FrameGraph &,
+                                                  FrameGraphBlackboard &,
+                                                  uint32_t numFrustums,
+                                                  glm::uvec2 numGroups);
 
   void _cullLights(FrameGraph &, FrameGraphBlackboard &,
                    FrameGraphResource gridFrustums, uint32_t numFrustums,

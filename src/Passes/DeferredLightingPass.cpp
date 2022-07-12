@@ -6,6 +6,7 @@
 #include "../FrameGraphTexture.hpp"
 #include "../FrameGraphBuffer.hpp"
 
+#include "../FrameData.hpp"
 #include "../BRDF.hpp"
 #include "../GlobalLightProbeData.hpp"
 #include "../LightsData.hpp"
@@ -50,6 +51,8 @@ DeferredLightingPass::~DeferredLightingPass() {
 FrameGraphResource
 DeferredLightingPass::addPass(FrameGraph &fg,
                               FrameGraphBlackboard &blackboard) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   const auto &gBuffer = blackboard.get<GBufferData>();
   const auto extent = fg.getDescriptor<FrameGraphTexture>(gBuffer.depth).extent;
 
@@ -69,6 +72,8 @@ DeferredLightingPass::addPass(FrameGraph &fg,
   auto &deferredLighting = fg.addCallbackPass<Data>(
     "DeferredLighting Pass",
     [&](FrameGraph::Builder &builder, Data &data) {
+      builder.read(frameBlock);
+
       builder.read(gBuffer.depth);
       builder.read(gBuffer.normal);
       builder.read(gBuffer.albedo);
@@ -106,6 +111,7 @@ DeferredLightingPass::addPass(FrameGraph &fg,
       auto &rc = *static_cast<RenderContext *>(ctx);
       const auto framebuffer = rc.beginRendering(renderingInfo);
       rc.setGraphicsPipeline(m_pipeline)
+        .bindUniformBuffer(0, getBuffer(resources, frameBlock))
 
         .bindTexture(0, getTexture(resources, gBuffer.depth))
         .bindTexture(1, getTexture(resources, gBuffer.normal))
