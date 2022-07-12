@@ -56,4 +56,8 @@ FetchContent_MakeAvailable(glad)
 FetchContent_MakeAvailable(FrameGraph)
 FetchContent_MakeAvailable(Tracy)
 
+include(cmake/AddResources.cmake)
+add_resources(TARGET Shaders IN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders OUT_DIR shaders)
+add_resources(TARGET Assets IN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets OUT_DIR assets)
+
 add_subdirectory(src)

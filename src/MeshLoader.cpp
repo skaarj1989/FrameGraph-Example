@@ -5,11 +5,12 @@
 
 namespace {
 
-auto buildMaterial(const MaterialInfo &info, TextureCache &textureCache) {
+auto buildMaterial(const MaterialInfo &info, const std::filesystem::path &root,
+                   TextureCache &textureCache) {
   Material::Builder builder{};
   builder.setBlendMode(info.blendMode);
   for (auto &[name, path, _] : info.textures) {
-    builder.addSampler(name, textureCache.load(path));
+    builder.addSampler(name, textureCache.load(root.parent_path() / path));
   }
   builder.setUserCode("", info.fragCode);
 
@@ -53,7 +54,7 @@ std::shared_ptr<Mesh> loadMesh(const std::filesystem::path &p,
   std::vector<SubMesh> subMeshes;
   for (auto &sm : meshImporter.getSubMeshes()) {
     subMeshes.push_back(
-      {sm.geometryInfo, buildMaterial(sm.materialInfo, textureCache)});
+      {sm.geometryInfo, buildMaterial(sm.materialInfo, p, textureCache)});
   }
 
   return std::make_shared<Mesh>(Mesh{

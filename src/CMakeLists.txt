@@ -155,7 +155,6 @@ add_executable(
 # After flipping GLM_FORCE_DEPTH_ZERO_TO_ONE, Recreate project and update
 # DEPTH_ZERO_TO_ONE in shaders/Depth.glsl
 target_compile_definitions(FrameGraphExample PUBLIC GLM_FORCE_RADIANS)
-
 target_link_libraries(FrameGraphExample
   PRIVATE
   glfw
@@ -168,3 +167,9 @@ target_link_libraries(FrameGraphExample
   imgui::imgui
   Tracy::TracyClient
 )
+
+set_target_properties(FrameGraphExample PROPERTIES
+  VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)")
+
+add_dependencies(FrameGraphExample Copy-Assets)
+add_dependencies(FrameGraphExample Copy-Shaders)

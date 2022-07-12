@@ -9,7 +9,7 @@
 
 namespace {
 
-static const std::filesystem::path kShadersPath{"../../shaders"};
+static const std::filesystem::path kShadersPath{"../shaders"};
 
 // https://stackoverflow.com/questions/26492513/write-c-regular-expression-to-match-a-include-preprocessing-directive
 // https://stackoverflow.com/questions/42139302/using-regex-to-filter-for-preprocessor-directives
