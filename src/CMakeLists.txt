@@ -3,6 +3,7 @@ find_package(glm CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(assimp CONFIG REQUIRED)
 find_path(STB_INCLUDE_DIRS "stb.h")
 
 add_executable(
@@ -14,6 +15,7 @@ add_executable(
   "ShaderCodeBuilder.hpp"
   "ShaderCodeBuilder.inl"
   "ShaderCodeBuilder.cpp"
+
   # -- RenderContext:
   "TypeDefs.hpp"
   "Buffer.hpp"
@@ -30,6 +32,7 @@ add_executable(
   "GraphicsPipeline.cpp"
   "RenderContext.hpp"
   "RenderContext.cpp"
+
   # -- FrameGraph:
   "TransientResources.hpp"
   "TransientResources.cpp"
@@ -39,6 +42,7 @@ add_executable(
   "FrameGraphBuffer.cpp"
   "FrameGraphHelper.hpp"
   "FrameGraphHelper.cpp"
+
   # -- PassData:
   "BRDF.hpp"
   "GlobalLightProbeData.hpp"
@@ -51,6 +55,7 @@ add_executable(
   "ShadowMapData.hpp"
   "SceneColorData.hpp"
   "BrightColorData.hpp"
+
   # -- WorldRenderer:
   "WorldRenderer.hpp"
   "WorldRenderer.cpp"
@@ -60,6 +65,7 @@ add_executable(
   "ShadowRenderer.cpp"
   "ShadowCascadesBuilder.hpp"
   "ShadowCascadesBuilder.cpp"
+
   # -- Passes:
   "Passes/BaseGeometryPass.hpp"
   "Passes/BaseGeometryPass.cpp"
@@ -75,6 +81,7 @@ add_executable(
   "Passes/WeightedBlendedPass.cpp"
   "Passes/TransparencyCompositionPass.hpp"
   "Passes/TransparencyCompositionPass.cpp"
+
   # -- Postprocessing Passes:
   "Passes/Blur.hpp"
   "Passes/Blur.cpp"
@@ -92,6 +99,7 @@ add_executable(
   "Passes/GammaCorrectionPass.cpp"
   "Passes/Vignette.hpp"
   "Passes/Vignette.cpp"
+
   # ---
   "AABB.hpp"
   "AABB.cpp"
@@ -116,6 +124,7 @@ add_executable(
   "LightUtility.hpp"
   "LightUtility.cpp"
   "Renderable.hpp"
+
   # ---
   "BasicShapes.hpp"
   "BasicShapes.cpp"
@@ -133,14 +142,16 @@ add_executable(
 # After flipping GLM_FORCE_DEPTH_ZERO_TO_ONE, Recreate project and update
 # DEPTH_ZERO_TO_ONE in shaders/Depth.glsl
 target_compile_definitions(FrameGraphExample PUBLIC GLM_FORCE_RADIANS)
-target_include_directories(FrameGraphExample PRIVATE ${STB_INCLUDE_DIRS})
-target_link_libraries(
-  FrameGraphExample
-  PRIVATE spdlog::spdlog
-          glm::glm
-          glad::glad
-          glfw
-          nlohmann_json::nlohmann_json
-          fg::FrameGraph
-          imgui::imgui
-          Tracy::TracyClient)
+
+target_link_libraries(FrameGraphExample
+  PRIVATE
+  glfw
+  glm::glm
+  glad::glad
+  spdlog::spdlog
+  fg::FrameGraph
+  nlohmann_json::nlohmann_json
+  assimp::assimp
+  imgui::imgui
+  Tracy::TracyClient
+)
