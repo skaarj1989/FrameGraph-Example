@@ -112,7 +112,8 @@ void WeightedBlendedPass::addPass(FrameGraph &fg,
                              getBuffer(resources, cascades.viewProjMatrices));
 
         for (const auto *renderable : renderables) {
-          const auto &[mesh, material, flags, modelMatrix, _] = *renderable;
+          const auto &[mesh, subMeshIndex, material, flags, modelMatrix, _] =
+            *renderable;
 
           rc.setGraphicsPipeline(_getPipeline(*mesh.vertexFormat, &material));
           _setTransform(*camera, modelMatrix);
@@ -121,7 +122,8 @@ void WeightedBlendedPass::addPass(FrameGraph &fg,
             rc.bindTexture(unit++, *texture);
           }
           rc.setUniform1i("u_MaterialFlags", flags)
-            .draw(mesh.vertexBuffer, mesh.indexBuffer, mesh.geometryInfo);
+            .draw(*mesh.vertexBuffer, *mesh.indexBuffer,
+                  mesh.subMeshes[subMeshIndex].geometryInfo);
         }
         rc.endRendering(framebuffer);
       });
@@ -165,21 +167,21 @@ WeightedBlendedPass::_createBasePassPipeline(const VertexFormat &vertexFormat,
       .depthCompareOp = CompareOp::LessOrEqual,
     })
     .setBlendState(0,
-                      {
-                        .enabled = true,
-                        .srcColor = BlendFactor::One,
-                        .destColor = BlendFactor::One,
-                        .srcAlpha = BlendFactor::One,
-                        .destAlpha = BlendFactor::One,
-                      })
+                   {
+                     .enabled = true,
+                     .srcColor = BlendFactor::One,
+                     .destColor = BlendFactor::One,
+                     .srcAlpha = BlendFactor::One,
+                     .destAlpha = BlendFactor::One,
+                   })
     .setBlendState(1,
-                      {
-                        .enabled = true,
-                        .srcColor = BlendFactor::Zero,
-                        .destColor = BlendFactor::OneMinusSrcColor,
-                        .srcAlpha = BlendFactor::Zero,
-                        .destAlpha = BlendFactor::OneMinusSrcColor,
-                      })
+                   {
+                     .enabled = true,
+                     .srcColor = BlendFactor::Zero,
+                     .destColor = BlendFactor::OneMinusSrcColor,
+                     .srcAlpha = BlendFactor::Zero,
+                     .destAlpha = BlendFactor::OneMinusSrcColor,
+                   })
     .setRasterizerState({
       .polygonMode = PolygonMode::Fill,
       .cullMode = material->getCullMode(),

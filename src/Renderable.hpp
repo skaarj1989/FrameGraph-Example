@@ -1,11 +1,10 @@
 #pragma once
 
 #include "Mesh.hpp"
-#include "Material.hpp"
-#include "AABB.hpp"
 
 struct Renderable {
   const Mesh &mesh;
+  int32_t subMeshIndex{0};
   const Material &material;
   uint8_t flags{0u};
 

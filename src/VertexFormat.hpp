@@ -67,4 +67,6 @@ private:
   const uint32_t m_stride{0};
 };
 
+[[nodiscard]] int32_t getSize(VertexAttribute::Type);
+
 [[nodiscard]] std::vector<std::string> buildDefines(const VertexFormat &);

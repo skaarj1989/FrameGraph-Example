@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
       .caption = "OpenGL FrameGraph",
       .width = 1280,
       .height = 720,
-      .verticalSync = false,
+      .verticalSync = true,
     }};
     app.run();
   } catch (const std::exception &e) {

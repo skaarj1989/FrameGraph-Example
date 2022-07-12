@@ -16,6 +16,11 @@ add_executable(
   "ShaderCodeBuilder.inl"
   "ShaderCodeBuilder.cpp"
 
+  "MeshImporter.hpp"
+  "MeshImporter.cpp"
+  "ai2glm.hpp"
+  "ai2glm.cpp"
+
   # -- RenderContext:
   "TypeDefs.hpp"
   "Buffer.hpp"
@@ -114,6 +119,10 @@ add_executable(
   "VertexFormat.hpp"
   "VertexFormat.cpp"
   "Mesh.hpp"
+  "MeshLoader.hpp"
+  "MeshLoader.cpp"
+  "MeshCache.hpp"
+  "MeshCache.cpp"
   "Material.hpp"
   "Material.cpp"
   "MaterialLoader.hpp"

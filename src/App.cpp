@@ -161,6 +161,7 @@ App::App(const Config &config) {
 
   m_textureCache = std::make_unique<TextureCache>(*m_renderContext);
   m_materialCache = std::make_unique<MaterialCache>(*m_textureCache);
+  m_meshCache = std::make_unique<MeshCache>(*m_renderContext, *m_textureCache);
 
   _setupUi();
   _setupScene();
@@ -291,6 +292,7 @@ void App::_setupScene() {
   m_renderContext->destroy(*equirectangular);
   m_renderer->setSkybox(m_skybox);
 
+#if 1
   const auto loadMaterial = [&cache =
                                *m_materialCache](const std::string_view name) {
     return cache.load(kAssetsDir /
@@ -298,7 +300,8 @@ void App::_setupScene() {
   };
 
   auto stoneBlockWallMaterial = loadMaterial("stone_block_wall");
-  _addRenderable(m_basicShapes->getPlane(), {0.0f, -1.5f, 0.0f},
+  _addRenderable(m_basicShapes->getPlane(),
+                 glm::translate(glm::mat4{1.0f}, glm::vec3{0.0f, -1.5f, 0.0f}),
                  *stoneBlockWallMaterial, MaterialFlag_ReceiveShadow);
 
   // clang-format off
@@ -312,7 +315,7 @@ void App::_setupScene() {
     "frosted_glass",
 #endif
     "floor_tiles",
-  }; 
+  };
   // clang-format on
 
   std::vector<std::reference_wrapper<const Material>> materials;
@@ -324,21 +327,31 @@ void App::_setupScene() {
     });
 
   _createTower({3, 3, 3}, 2.5f, {0.0f, -2.5f, 0.0f}, materials);
+#else
+  auto sponza = m_meshCache->load(kAssetsDir / "meshes/Sponza/Sponza.gltf");
+  _addRenderable(*sponza, glm::scale(glm::mat4{1.0f}, glm::vec3{5.0f}), {});
+#endif
 
   _createSun();
   //_spawnPointLights(10, 10, 2.0f);
 }
 
-void App::_addRenderable(const Mesh &mesh, const glm::vec3 &position,
-                         const Material &material, uint8_t flags) {
-  const auto m = glm::translate(glm::mat4{1.0f}, position);
-  m_renderables.push_back(Renderable{
-    .mesh = mesh,
-    .material = material,
-    .flags = flags,
-    .modelMatrix = m,
-    .aabb = mesh.aabb.transform(m),
-  });
+void App::_addRenderable(
+  const Mesh &mesh, const glm::mat4 &m,
+  std::optional<std::reference_wrapper<const Material>> materialOverride,
+  uint8_t flags) {
+
+  auto id = 0;
+  for (auto &[_, material] : mesh.subMeshes) {
+    m_renderables.push_back(Renderable{
+      .mesh = mesh,
+      .subMeshIndex = id++,
+      .material = materialOverride ? materialOverride->get() : *material,
+      .flags = flags,
+      .modelMatrix = m,
+      .aabb = mesh.aabb.transform(m),
+    });
+  }
 }
 
 void App::_createTower(
@@ -356,8 +369,9 @@ void App::_createTower(
                                       row * spacing + spacing,
                                       (z - (dimensions.z / 2)) * spacing};
         auto material = getRandomOf(gen, materials);
-        // auto *material = m_materials[getRandomOf(gen, materialNames)].get();
-        _addRenderable(mesh, startPosition + localPosition, material.get());
+        _addRenderable(
+          mesh, glm::translate(glm::mat4{1.0}, startPosition + localPosition),
+          material);
       }
 }
 
@@ -365,7 +379,8 @@ void App::_createSun() {
   m_lights.push_back(Light{
     .type = LightType::Directional,
     .visible = true,
-    .direction = glm::vec3{0.5f, -0.5f, 0.0f},
+    //.direction = glm::vec3{0.5f, -0.5f, 0.0f},
+    .direction = glm::normalize(glm::vec3{0.0f, -1.0f, 0.2f}),
     .color = glm::vec3{0.635f, 0.811f, 0.996f},
     .intensity = 6.0f,
   });

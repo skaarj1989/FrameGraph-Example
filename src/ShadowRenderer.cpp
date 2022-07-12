@@ -307,12 +307,14 @@ FrameGraphResource ShadowRenderer::_addCascadedPass(
       auto &rc = *static_cast<RenderContext *>(ctx);
       const auto framebuffer = rc.beginRendering(renderingInfo);
       for (const auto *renderable : renderables) {
-        const auto &[mesh, material, _0, modelMatrix, _1] = *renderable;
+        const auto &[mesh, subMeshIndex, material, _0, modelMatrix, _1] =
+          *renderable;
 
         rc.setGraphicsPipeline(_getPipeline(*mesh.vertexFormat, &material))
           .setUniformMat4("u_Transform.modelViewProj",
                           lightViewProj * modelMatrix)
-          .draw(mesh.vertexBuffer, mesh.indexBuffer, mesh.geometryInfo);
+          .draw(*mesh.vertexBuffer, *mesh.indexBuffer,
+                mesh.subMeshes[subMeshIndex].geometryInfo);
       }
       rc.endRendering(framebuffer);
     });

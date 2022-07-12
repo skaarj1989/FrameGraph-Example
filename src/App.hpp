@@ -5,6 +5,7 @@
 #include "CubemapConverter.hpp"
 #include "ImGuiRenderer.hpp"
 
+#include "MeshCache.hpp"
 #include "MaterialCache.hpp"
 
 #include <map>
@@ -38,9 +39,10 @@ private:
 
   void _setupScene();
 
-  void _addRenderable(const Mesh &, const glm::vec3 &position,
-                      const Material &material,
-                      uint8_t flags = MaterialFlag_Default);
+  void _addRenderable(
+    const Mesh &, const glm::mat4 &,
+    std::optional<std::reference_wrapper<const Material>> materialOverride,
+    uint8_t flags = MaterialFlag_Default);
 
   void _createTower(const glm::ivec3 &dimensions, float spacing,
                     const glm::vec3 &,
@@ -77,6 +79,7 @@ private:
 
   std::unique_ptr<TextureCache> m_textureCache;
   std::unique_ptr<MaterialCache> m_materialCache;
+  std::unique_ptr<MeshCache> m_meshCache;
 
   Texture m_skybox;
 

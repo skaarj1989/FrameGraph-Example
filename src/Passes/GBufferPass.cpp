@@ -86,7 +86,8 @@ void GBufferPass::addGeometryPass(FrameGraph &fg,
       auto &rc = *static_cast<RenderContext *>(ctx);
       const auto framebuffer = rc.beginRendering(renderingInfo);
       for (const auto &renderable : renderables) {
-        auto &[mesh, material, flags, modelMatrix, _] = *renderable;
+        auto &[mesh, subMeshIndex, material, flags, modelMatrix, _] =
+          *renderable;
 
         rc.setGraphicsPipeline(_getPipeline(*mesh.vertexFormat, &material));
         _setTransform(*camera, modelMatrix);
@@ -95,7 +96,8 @@ void GBufferPass::addGeometryPass(FrameGraph &fg,
           rc.bindTexture(unit++, *texture);
         }
         rc.setUniform1i("u_MaterialFlags", flags)
-          .draw(mesh.vertexBuffer, mesh.indexBuffer, mesh.geometryInfo);
+          .draw(*mesh.vertexBuffer, *mesh.indexBuffer,
+                mesh.subMeshes[subMeshIndex].geometryInfo);
       }
       rc.endRendering(framebuffer);
     });
