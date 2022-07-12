@@ -141,7 +141,7 @@ void ShadowRenderer::buildCascadedShadowMaps(
     auto cascades = buildCascades(camera, light->direction, kNumCascades, 0.94f,
                                   kShadowMapSize);
 
-    FrameGraphResource cascadedShadowMaps{-1};
+    std::optional<FrameGraphResource> cascadedShadowMaps;
     for (uint32_t i{0}; i < cascades.size(); ++i) {
       const auto &lightViewProj = cascades[i].viewProjMatrix;
       auto visibleShadowCasters = getVisibleShadowCasters(
@@ -152,11 +152,11 @@ void ShadowRenderer::buildCascadedShadowMaps(
       // The first iteration will be responsible for creation of the shadowmap
       // (Texture2DArray)
       cascadedShadowMaps =
-        _addCascadedPass(fg, cascadedShadowMaps, lightViewProj,
-                         std::move(visibleShadowCasters), i);
+        _addCascadePass(fg, cascadedShadowMaps, lightViewProj,
+                        std::move(visibleShadowCasters), i);
     }
-    assert(cascadedShadowMaps != -1);
-    shadowMapData.cascadedShadowMaps = cascadedShadowMaps;
+    assert(cascadedShadowMaps);
+    shadowMapData.cascadedShadowMaps = *cascadedShadowMaps;
     uploadCascades(fg, blackboard, std::move(cascades));
   }
 }
@@ -269,8 +269,8 @@ ShadowRenderer::_createBasePassPipeline(const VertexFormat &vertexFormat,
     .build();
 }
 
-FrameGraphResource ShadowRenderer::_addCascadedPass(
-  FrameGraph &fg, FrameGraphResource cascadedShadowMaps,
+FrameGraphResource ShadowRenderer::_addCascadePass(
+  FrameGraph &fg, std::optional<FrameGraphResource> cascadedShadowMaps,
   const glm::mat4 &lightViewProj, std::vector<const Renderable *> &&renderables,
   uint32_t cascadeIdx) {
   assert(cascadeIdx < kNumCascades);
@@ -283,6 +283,7 @@ FrameGraphResource ShadowRenderer::_addCascadedPass(
     name,
     [&](FrameGraph::Builder &builder, Data &data) {
       if (cascadeIdx == 0) {
+        assert(!cascadedShadowMaps);
         cascadedShadowMaps = builder.create<FrameGraphTexture>(
           "CascadedShadowMaps", {
                                   .extent = {kShadowMapSize, kShadowMapSize},
@@ -291,7 +292,7 @@ FrameGraphResource ShadowRenderer::_addCascadedPass(
                                   .shadowSampler = true,
                                 });
       }
-      data.output = builder.write(cascadedShadowMaps);
+      data.output = builder.write(*cascadedShadowMaps);
     },
     [=, renderables = std::move(renderables)](
       const Data &data, FrameGraphPassResources &resources, void *ctx) {
@@ -314,10 +315,9 @@ FrameGraphResource ShadowRenderer::_addCascadedPass(
         const auto &[mesh, subMeshIndex, material, _0, modelMatrix, _1] =
           *renderable;
 
-        rc.setGraphicsPipeline(_getPipeline(*mesh.vertexFormat, &material))
-          .setUniformMat4("u_Transform.modelViewProj",
-                          lightViewProj * modelMatrix)
-          .draw(*mesh.vertexBuffer, *mesh.indexBuffer,
+        rc.setGraphicsPipeline(_getPipeline(*mesh.vertexFormat, &material));
+        _setTransform(lightViewProj, modelMatrix);
+        rc.draw(*mesh.vertexBuffer, *mesh.indexBuffer,
                 mesh.subMeshes[subMeshIndex].geometryInfo);
       }
       rc.endRendering(framebuffer);

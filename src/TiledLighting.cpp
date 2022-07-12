@@ -165,7 +165,7 @@ void TiledLighting::_cullLights(FrameGraph &fg,
         .bindStorageBuffer(0, getBuffer(resources, lightBuffer))
         .bindStorageBuffer(1, getBuffer(resources, gridFrustums))
 
-        .clear(lightsCounterSSBO)
+        //.clear(lightsCounterSSBO)
         .bindStorageBuffer(2, lightsCounterSSBO)
         .bindStorageBuffer(3, getBuffer(resources, data.lightIndices))
 

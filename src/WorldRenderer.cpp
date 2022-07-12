@@ -59,10 +59,8 @@ struct GPUFrameBlock {
 // - Position and direction in view-space
 // - Angles in radians
 __declspec(align(16)) struct GPULight {
-  GPULight(const Light &light, const glm::mat4 &view) {
-    const glm::vec3 viewSpacePosition{view * glm::vec4{light.position, 1.0f}};
-
-    position = glm::vec4{viewSpacePosition, light.range};
+  GPULight(const Light &light) {
+    position = glm::vec4{light.position, light.range};
     color = glm::vec4{light.color, light.intensity};
     type = static_cast<uint32_t>(light.type);
 
@@ -71,7 +69,7 @@ __declspec(align(16)) struct GPULight {
       outerConeAngle = glm::radians(light.outerConeAngle);
     }
     if (light.type != LightType::Point) {
-      direction = glm::normalize(view * glm::vec4{light.direction, 0.0f});
+      direction = glm::normalize(glm::vec4{light.direction, 0.0f});
     }
   }
 
@@ -151,15 +149,14 @@ void uploadLights(FrameGraph &fg, FrameGraphBlackboard &blackboard,
         builder.create<FrameGraphBuffer>("LightsBuffer", {.size = kBufferSize});
       data.buffer = builder.write(data.buffer);
     },
-    [=, camera = &camera](const LightsData &data,
-                          FrameGraphPassResources &resources, void *ctx) {
+    [=](const LightsData &data, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("UploadLights");
       TracyGpuZone("UploadLights");
 
       std::vector<GPULight> gpuLights;
       gpuLights.reserve(lights.size());
       for (const auto *light : lights)
-        gpuLights.emplace_back(GPULight{*light, camera->getView()});
+        gpuLights.emplace_back(GPULight{*light});
 
       const auto numLights = static_cast<uint32_t>(gpuLights.size());
       constexpr auto kLightsNumberOffset = sizeof(GPULight) * kMaxNumLights;
@@ -456,7 +453,7 @@ void WorldRenderer::_present(FrameGraph &fg, FrameGraphBlackboard &blackboard,
     Mode_GreenChannel,
     Mode_BlueChannel,
     Mode_AlphaChannel,
-    Mode_WorldSpaceNormals,
+    Mode_ViewSpaceNormals,
   } mode{Mode_Default};
 
   FrameGraphResource output{-1};
@@ -475,7 +472,7 @@ void WorldRenderer::_present(FrameGraph &fg, FrameGraphBlackboard &blackboard,
     break;
   case Normal:
     output = blackboard.get<GBufferData>().normal;
-    mode = Mode_WorldSpaceNormals;
+    // mode = Mode_ViewSpaceNormals;
     break;
   case Metallic:
     output = blackboard.get<GBufferData>().metallicRoughnessAO;

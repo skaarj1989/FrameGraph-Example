@@ -50,10 +50,8 @@ _DECLARE_LIGHT_BUFFER(0, g_LightBuffer);
 layout(location = 0) out vec3 FragColor;
 void main() {
   const float depth = getDepth(t_SceneDepth, v_TexCoord);
-  if (depth >= 1.0) {
-    discard;
-    return;
-  }
+  if (depth >= 1.0) discard;
+
   const vec3 emissiveColor = texture(t_GBuffer2, v_TexCoord).rgb;
 
   vec4 temp = texture(t_GBuffer3, v_TexCoord);
@@ -89,8 +87,11 @@ void main() {
   // H = halfway vector (between V and L)
 
   const vec3 fragPosViewSpace = viewPositionFromDepth(depth, v_TexCoord);
+  const vec3 fragPosWorldSpace =
+    (u_Frame.camera.inversedView * vec4(fragPosViewSpace, 1.0)).xyz;
+
   const vec3 N = normalize(texture(t_GBuffer0, v_TexCoord).rgb);
-  const vec3 V = normalize(-fragPosViewSpace);
+  const vec3 V = normalize(getCameraPosition() - fragPosWorldSpace);
   const float NdotV = clamp01(dot(N, V));
 
   // Dielectrics: [0.02..0.05], Metals: [0.5..1.0]
@@ -140,7 +141,7 @@ void main() {
     const Light light = g_LightBuffer.data[lightIndex];
 
     const vec3 fragToLight = light.type != LightType_Directional
-                               ? light.position.xyz - fragPosViewSpace
+                               ? light.position.xyz - fragPosWorldSpace
                                : -light.direction.xyz;
 
     const vec3 L = normalize(fragToLight);
@@ -150,8 +151,11 @@ void main() {
     if (NdotL > 0.0 || NdotV > 0.0) {
       float visibility = 1.0;
       if (hasRenderFeatures(RenderFeature_Shadows) && receiveShadow) {
-        if (light.type == LightType_Directional)
-          visibility = _getDirLightVisibility(fragPosViewSpace, NdotL);
+        if (light.type == LightType_Directional) {
+          const uint cascadeIndex = _selectCascadeIndex(fragPosViewSpace);
+          visibility =
+            _getDirLightVisibility(cascadeIndex, fragPosWorldSpace, NdotL);
+        }
 
         if (visibility == 0.0) continue;
       }

@@ -12,7 +12,7 @@ const uint Mode_RedChannel = 2;
 const uint Mode_GreenChannel = 3;
 const uint Mode_BlueChannel = 4;
 const uint Mode_AlphaChannel = 5;
-const uint Mode_WorldSpaceNormals = 6;
+const uint Mode_ViewSpaceNormals = 6;
 
 layout(location = 0) uniform uint u_Mode = Mode_Default;
 
@@ -38,8 +38,8 @@ void main() {
   case Mode_AlphaChannel:
     FragColor = source.aaa;
     break;
-  case Mode_WorldSpaceNormals:
-    FragColor = vec3(viewToWorld(vec4(source.rgb, 0.0)));
+  case Mode_ViewSpaceNormals:
+    FragColor = (u_Frame.camera.view * vec4(source.rgb, 0.0)).xyz;
     break;
 
   case Mode_Default:

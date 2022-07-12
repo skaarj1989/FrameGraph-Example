@@ -306,7 +306,7 @@ void App::_setupScene() {
 
   // clang-format off
   const std::vector<std::string> materialNames{
-#if 1
+#if 0
     "stringy_marble",
     "streaky_metal",
     "gold_scuffed",

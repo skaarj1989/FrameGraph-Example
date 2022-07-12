@@ -26,6 +26,8 @@ float getDeltaTime() { return u_Frame.deltaTime; }
 uvec2 getResolution() { return u_Frame.resolution; }
 vec2 getTexelSize() { return 1.0 / vec2(u_Frame.resolution); }
 
+vec3 getCameraPosition() { return u_Frame.camera.inversedView[3].xyz; }
+
 const uint RenderFeature_Shadows = 1 << 1;
 const uint RenderFeature_SSAO = 1 << 2;
 

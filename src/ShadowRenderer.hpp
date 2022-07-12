@@ -28,9 +28,10 @@ private:
                                            const Material *) final;
 
   [[nodiscard]] FrameGraphResource
-  _addCascadedPass(FrameGraph &, FrameGraphResource cascadedShadowMaps,
-                   const glm::mat4 &lightViewProj,
-                   std::vector<const Renderable *> &&, uint32_t cascadeIdx);
+  _addCascadePass(FrameGraph &,
+                  std::optional<FrameGraphResource> cascadedShadowMaps,
+                  const glm::mat4 &lightViewProj,
+                  std::vector<const Renderable *> &&, uint32_t cascadeIdx);
 
 private:
   Buffer m_shadowMatrices;

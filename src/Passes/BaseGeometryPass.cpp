@@ -5,21 +5,6 @@
 #include <sstream>
 #include <format>
 
-namespace {
-
-struct GPUTransform {
-  GPUTransform(const PerspectiveCamera &camera, const glm::mat4 &modelMatrix)
-      : modelView{camera.getView() * modelMatrix},
-        normal{glm::transpose(glm::inverse(glm::mat3(modelView)))},
-        modelViewProj{camera.getProjection() * modelView} {}
-
-  const glm::mat4 modelView;
-  const glm::mat4 normal;
-  const glm::mat4 modelViewProj;
-};
-
-} // namespace
-
 //
 // BaseGeometryPass class:
 //
@@ -32,10 +17,15 @@ BaseGeometryPass::~BaseGeometryPass() {
 
 void BaseGeometryPass::_setTransform(const PerspectiveCamera &camera,
                                      const glm::mat4 &modelMatrix) {
-  const GPUTransform xf{camera, modelMatrix};
-  m_renderContext.setUniformMat4("u_Transform.modelView", xf.modelView)
-    .setUniformMat4("u_Transform.normalMatrix", xf.normal)
-    .setUniformMat4("u_Transform.modelViewProj", xf.modelViewProj);
+  _setTransform(camera.getViewProjection(), modelMatrix);
+}
+void BaseGeometryPass::_setTransform(const glm::mat4 &viewProjection,
+                                     const glm::mat4 &modelMatrix) {
+  m_renderContext.setUniformMat4("u_Transform.modelMatrix", modelMatrix)
+    .setUniformMat4("u_Transform.normalMatrix",
+                    glm::transpose(glm::inverse(glm::mat3(modelMatrix))))
+    .setUniformMat4("u_Transform.modelViewProjMatrix",
+                    viewProjection * modelMatrix);
 }
 
 GraphicsPipeline &

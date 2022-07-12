@@ -240,7 +240,7 @@ material.visible = baseColor.a > 0.7;
 
 #ifdef HAS_NORMAL_MAP
 const vec3 N = sampleNormalMap(t_Normals, texCoord);
-material.normal = tangentToView(N, texCoord);
+material.normal = tangentToWorld(N, texCoord);
 #endif
 
 #ifdef HAS_METAL_ROUGH_AO_MAP

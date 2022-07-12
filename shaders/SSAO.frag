@@ -20,17 +20,15 @@ const float kBias = 0.025;
 layout(location = 0) out float FragColor;
 void main() {
   const float depth = getDepth(t_SceneDepth, v_TexCoord);
-  if (depth >= 1.0) {
-    discard;
-    return;
-  }
+  if (depth >= 1.0) discard;
 
   const vec2 gbufferSize = textureSize(t_SceneDepth, 0);
   const vec2 noiseSize = textureSize(t_Noise, 0);
   const vec2 noiseTexCoord = (gbufferSize / noiseSize) * v_TexCoord;
   const vec3 rvec = texture(t_Noise, noiseTexCoord).xyz;
 
-  const vec3 N = normalize(texture(t_GBuffer0, v_TexCoord).rgb);
+  vec3 N = normalize(texture(t_GBuffer0, v_TexCoord).rgb);
+  N = mat3(u_Frame.camera.view) * N;
   const vec3 T = normalize(rvec - N * dot(rvec, N));
   const vec3 B = cross(N, T);
   const mat3 TBN = mat3(T, B, N); // tangent-space -> view-space

@@ -25,21 +25,19 @@ layout(location = 8) in vec4 a_Weights;
 #endif
 
 struct Transform {
-  mat4 modelView;
+  mat4 modelMatrix;
   mat4 normalMatrix;
-  mat4 modelViewProj;
+  mat4 modelViewProjMatrix;
 };
 layout(location = 0) uniform Transform u_Transform;
 
 out gl_PerVertex { vec4 gl_Position; };
 
 layout(location = 0) out VertexData {
-#if !DEPTH_PASS
-  vec4 fragPosViewSpace;
-#endif
+  vec4 fragPos; // world-space
 #ifdef HAS_NORMAL
 #  ifdef HAS_TANGENTS
-  mat3 TBN; // tangent-space -> view-space
+  mat3 TBN; // tangent-space -> world-space
 #  else
   vec3 normal;
 #  endif
@@ -57,28 +55,18 @@ layout(location = 0) out VertexData {
 vs_out;
 
 void main() {
-  vec3 vertexOffset = vec3(0.0);
+  vs_out.fragPos = u_Transform.modelMatrix * vec4(a_Position, 1.0);
 
-  const mat4 skinMatrix = mat4(1.0);
-#ifdef IS_SKINNED
-  skinMatrix = getSkinMatrix(instanceInfo.skinOffset);
-#endif
-  const vec4 localPos = skinMatrix * vec4(a_Position + vertexOffset, 1.0);
-
-#if !DEPTH_PASS
-  vs_out.fragPosViewSpace = u_Transform.modelView * localPos;
-
-#  ifdef HAS_NORMAL
-  const mat3 normalMatrix = mat3(u_Transform.normalMatrix * skinMatrix);
+#ifdef HAS_NORMAL
+  const mat3 normalMatrix = mat3(u_Transform.normalMatrix);
   const vec3 N = normalize(normalMatrix * a_Normal);
-#    ifdef HAS_TANGENTS
+#  ifdef HAS_TANGENTS
   vec3 T = normalize(normalMatrix * a_Tangent);
   T = normalize(T - dot(T, N) * N);
   vec3 B = normalize(normalMatrix * a_Bitangent);
   vs_out.TBN = mat3(T, B, N);
-#    else
+#  else
   vs_out.normal = N;
-#    endif
 #  endif
 #endif
 
@@ -93,5 +81,5 @@ void main() {
   vs_out.color = a_Color0;
 #endif
 
-  gl_Position = u_Transform.modelViewProj * localPos;
+  gl_Position = u_Transform.modelViewProjMatrix * vec4(a_Position, 1.0);
 }
