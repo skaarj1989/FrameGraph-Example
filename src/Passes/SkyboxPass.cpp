@@ -38,7 +38,7 @@ FrameGraphResource SkyboxPass::addPass(FrameGraph &fg,
                                        FrameGraphBlackboard &blackboard,
                                        FrameGraphResource target,
                                        Texture *cubemap) {
-  assert(cubemap and *cubemap);
+  assert(cubemap && *cubemap);
 
   const auto [frameBlock] = blackboard.get<FrameData>();
 

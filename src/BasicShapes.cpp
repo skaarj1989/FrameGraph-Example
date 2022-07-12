@@ -74,7 +74,7 @@ template <uint8_t _NumSectors = 36, uint8_t _NumStacks = 18>
 [[nodiscard]] auto buildSphere(float radius) {
   // http://www.songho.ca/opengl/gl_sphere.html
 
-  static_assert(_NumSectors >= 3 and _NumStacks >= 2);
+  static_assert(_NumSectors >= 3 && _NumStacks >= 2);
   constexpr auto kPI = glm::pi<float>();
 
   std::vector<Vertex1p1n1st> vertices;

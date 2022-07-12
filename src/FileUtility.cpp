@@ -8,7 +8,7 @@ std::filesystem::path adjustPath(const std::filesystem::path &p,
 
 std::string readText(const std::filesystem::path &p) {
   std::ifstream file(p.string().c_str());
-  if (not file.is_open())
+  if (!file.is_open())
     throw std::runtime_error{"Failed to open file: " + p.string()};
 
   std::stringstream ss;

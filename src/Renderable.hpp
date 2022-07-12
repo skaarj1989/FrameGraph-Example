@@ -20,5 +20,5 @@ using Renderables = std::vector<Renderable>;
   return renderable->material.getBlendMode() == BlendMode::Transparent;
 }
 [[nodiscard]] inline bool isOpaque(const Renderable *renderable) {
-  return not isTransparent(renderable);
+  return !isTransparent(renderable);
 }

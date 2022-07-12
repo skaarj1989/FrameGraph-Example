@@ -143,7 +143,7 @@ IndexBuffer RenderContext::createIndexBuffer(IndexType indexType,
 }
 
 GLuint RenderContext::getVertexArray(const VertexAttributes &attributes) {
-  assert(not attributes.empty());
+  assert(!attributes.empty());
 
   std::size_t hash{0};
   for (const auto &[location, attribute] : attributes)
@@ -173,7 +173,7 @@ GLuint RenderContext::createComputeProgram(const std::string_view code) {
 Texture RenderContext::createTexture2D(Extent2D extent, PixelFormat pixelFormat,
                                        uint32_t numMipLevels,
                                        uint32_t numLayers) {
-  assert(extent.width > 0 and extent.height > 0 and
+  assert(extent.width > 0 && extent.height > 0 and
          pixelFormat != PixelFormat::Unknown);
 
   if (numMipLevels <= 0)
@@ -184,7 +184,7 @@ Texture RenderContext::createTexture2D(Extent2D extent, PixelFormat pixelFormat,
 Texture RenderContext::createCubemap(uint32_t size, PixelFormat pixelFormat,
                                      uint32_t numMipLevels,
                                      uint32_t numLayers) {
-  assert(size > 0 and pixelFormat != PixelFormat::Unknown);
+  assert(size > 0 && pixelFormat != PixelFormat::Unknown);
 
   if (numMipLevels <= 0) numMipLevels = calcMipLevels(size);
   return _createImmutableTexture({size, size}, 0, pixelFormat, 6, numMipLevels,
@@ -268,7 +268,7 @@ RenderContext &RenderContext::upload(Texture &texture, GLint mipLevel,
 RenderContext &RenderContext::upload(Texture &texture, GLint mipLevel,
                                      const glm::uvec3 &dimensions, GLint face,
                                      GLsizei layer, const ImageData &image) {
-  assert(texture and image.pixels != nullptr);
+  assert(texture && image.pixels != nullptr);
 
   switch (texture.m_type) {
   case GL_TEXTURE_1D:
@@ -322,13 +322,13 @@ RenderContext &RenderContext::clear(Buffer &buffer) {
 RenderContext &RenderContext::upload(Buffer &buffer, GLintptr offset,
                                      GLsizeiptr size, const void *data) {
   assert(buffer);
-  if (size > 0 and data != nullptr)
+  if (size > 0 && data != nullptr)
     glNamedBufferSubData(buffer.m_id, offset, size, data);
   return *this;
 }
 void *RenderContext::map(Buffer &buffer) {
   assert(buffer);
-  if (not buffer.isMapped())
+  if (!buffer.isMapped())
     buffer.m_mappedMemory = glMapNamedBuffer(buffer, GL_WRITE_ONLY);
   return buffer.m_mappedMemory;
 }
@@ -373,7 +373,7 @@ RenderContext &RenderContext::dispatch(GLuint computeProgram,
 }
 
 GLuint RenderContext::beginRendering(const RenderingInfo &renderingInfo) {
-  assert(not m_renderingStarted);
+  assert(!m_renderingStarted);
 
   TracyGpuZone("BeginRendering");
 
@@ -443,7 +443,7 @@ RenderContext &RenderContext::beginRendering(
   return *this;
 }
 RenderContext &RenderContext::endRendering(GLuint framebuffer) {
-  assert(m_renderingStarted and framebuffer != GL_NONE);
+  assert(m_renderingStarted && framebuffer != GL_NONE);
 
   glDeleteFramebuffers(1, &framebuffer);
   m_renderingStarted = false;
@@ -561,7 +561,7 @@ RenderContext &RenderContext::setScissor(const Rect2D &rect) {
 
 RenderContext &RenderContext::bindImage(GLuint unit, const Texture &texture,
                                         GLint mipLevel, GLenum access) {
-  assert(texture and mipLevel < texture.m_numMipLevels);
+  assert(texture && mipLevel < texture.m_numMipLevels);
   glBindImageTexture(unit, texture, mipLevel, GL_FALSE, 0, access,
                      static_cast<GLenum>(texture.m_pixelFormat));
   return *this;
@@ -647,7 +647,7 @@ void RenderContext::_setupDebugCallback() {
 void RenderContext::_debugCallback(GLenum source, GLenum type, GLuint id,
                                    GLenum severity, GLsizei length,
                                    const GLchar *message, const void *) {
-  if (type == GL_DEBUG_TYPE_PUSH_GROUP or type == GL_DEBUG_TYPE_POP_GROUP)
+  if (type == GL_DEBUG_TYPE_PUSH_GROUP || type == GL_DEBUG_TYPE_POP_GROUP)
     return;
 
   static std::unordered_map<GLenum, const char *> sources{
@@ -880,13 +880,13 @@ void RenderContext::_setVertexArray(GLuint vao) {
 }
 void RenderContext::_setVertexBuffer(const VertexBuffer &vertexBuffer) {
   const auto vao = m_currentPipeline.m_vertexArray;
-  assert(vertexBuffer and vao != GL_NONE);
+  assert(vertexBuffer && vao != GL_NONE);
   glVertexArrayVertexBuffer(vao, 0, vertexBuffer.m_id, 0,
                             vertexBuffer.getStride());
 }
 void RenderContext::_setIndexBuffer(const IndexBuffer &indexBuffer) {
   const auto vao = m_currentPipeline.m_vertexArray;
-  assert(indexBuffer and vao != GL_NONE);
+  assert(indexBuffer && vao != GL_NONE);
   glVertexArrayElementBuffer(vao, indexBuffer.m_id);
 }
 
@@ -896,7 +896,7 @@ void RenderContext::_setDepthTest(bool enabled, CompareOp depthFunc) {
     enabled ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
     current.depthTest = enabled;
   }
-  if (enabled and depthFunc != current.depthCompareOp) {
+  if (enabled && depthFunc != current.depthCompareOp) {
     glDepthFunc(static_cast<GLenum>(depthFunc));
     current.depthCompareOp = depthFunc;
   }

@@ -5,7 +5,7 @@
 
 FrameGraphResource importTexture(FrameGraph &fg, const std::string_view name,
                                  Texture *texture) {
-  assert(texture and *texture);
+  assert(texture && *texture);
   return fg.import<FrameGraphTexture>(
     name,
     {
@@ -22,7 +22,7 @@ Texture &getTexture(FrameGraphPassResources &resources, FrameGraphResource id) {
 
 FrameGraphResource importBuffer(FrameGraph &fg, const std::string_view name,
                                 Buffer *buffer) {
-  assert(buffer and *buffer);
+  assert(buffer && *buffer);
   return fg.import<FrameGraphBuffer>(name, {.size = buffer->getSize()},
                                      {buffer});
 }

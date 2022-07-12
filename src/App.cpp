@@ -96,7 +96,7 @@ void cameraController(PerspectiveCamera &camera, const ImVec2 &mouseDelta,
   auto yaw = camera.getYaw();
   auto pitch = camera.getPitch();
 
-  if (mouseButtons[LMB] and mouseButtons[RMB]) {
+  if (mouseButtons[LMB] && mouseButtons[RMB]) {
     // Zoom on LMB + RMB
     position -= camera.getForward() * (mouseDelta.x * kMoveSensitivity);
     position += camera.getForward() * (mouseDelta.y * kMoveSensitivity);
@@ -189,7 +189,7 @@ void App::run() {
   auto &io = ImGui::GetIO();
   ImVec2 lastMousePos{0.0f, 0.0f};
 
-  while (not glfwWindowShouldClose(m_window)) {
+  while (!glfwWindowShouldClose(m_window)) {
     const auto beginTicks = clock::now();
     glfwPollEvents();
 
@@ -202,7 +202,7 @@ void App::run() {
 
     for (int32_t i{0}; i < IM_ARRAYSIZE(io.MouseDown); ++i) {
       io.MouseDown[i] =
-        m_mouseJustPressed[i] or glfwGetMouseButton(m_window, i) != 0;
+        m_mouseJustPressed[i] || glfwGetMouseButton(m_window, i) != 0;
       m_mouseJustPressed[i] = false;
     }
 
@@ -211,7 +211,7 @@ void App::run() {
       0.1f, 1000.0f);
 
     _processInput();
-    if (not io.WantCaptureMouse)
+    if (!io.WantCaptureMouse)
       cameraController(m_camera, io.MousePos - lastMousePos, io.MouseDown);
     lastMousePos = io.MousePos;
 
@@ -426,7 +426,7 @@ glm::vec2 App::_getMousePosition() const {
 
 void App::_onMouseButton(GLFWwindow *window, int button, int action, int mods) {
   auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
-  if (action == GLFW_PRESS and button >= 0 and
+  if (action == GLFW_PRESS && button >= 0 &&
       button < IM_ARRAYSIZE(m_mouseJustPressed))
     app->m_mouseJustPressed[button] = true;
 }
@@ -438,7 +438,7 @@ void App::_onMouseScroll(GLFWwindow *window, double xoffset, double yoffset) {
 void App::_onKey(GLFWwindow *window, int key, int scancode, int action,
                  int mods) {
   auto &io = ImGui::GetIO();
-  if (key >= 0 and key < IM_ARRAYSIZE(io.KeysDown)) {
+  if (key >= 0 && key < IM_ARRAYSIZE(io.KeysDown)) {
     if (action == GLFW_PRESS) {
       io.KeysDown[key] = true;
     }
@@ -449,15 +449,15 @@ void App::_onKey(GLFWwindow *window, int key, int scancode, int action,
 
   // Modifiers are not reliable across systems
   io.KeyCtrl =
-    io.KeysDown[GLFW_KEY_LEFT_CONTROL] or io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
+    io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
   io.KeyShift =
-    io.KeysDown[GLFW_KEY_LEFT_SHIFT] or io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
-  io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] or io.KeysDown[GLFW_KEY_RIGHT_ALT];
+    io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
+  io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
 #ifdef _WIN32
   io.KeySuper = false;
 #else
   io.KeySuper =
-    io.KeysDown[GLFW_KEY_LEFT_SUPER] or io.KeysDown[GLFW_KEY_RIGHT_SUPER];
+    io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
 #endif
 }
 void App::_onFocus(GLFWwindow *window, int focused) {

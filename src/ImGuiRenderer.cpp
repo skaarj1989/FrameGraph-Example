@@ -18,7 +18,7 @@ constexpr auto kClipOriginLowerLeft = true;
   const auto R = displayPos.x + displaySize.x;
   auto B = displayPos.y + displaySize.y;
   auto T = displayPos.y;
-  if constexpr (not kClipOriginLowerLeft) std::swap(T, B);
+  if constexpr (!kClipOriginLowerLeft) std::swap(T, B);
 
   // clang-format off
   return {
@@ -65,7 +65,7 @@ void ImGuiRenderer::draw(const ImDrawData *drawData) {
   const auto framebufferHeight =
     drawData->DisplaySize.y * drawData->FramebufferScale.y;
   // Avoid rendering when minimized
-  if (framebufferWidth <= 0 or framebufferHeight <= 0) return;
+  if (framebufferWidth <= 0 || framebufferHeight <= 0) return;
 
   _setupRenderState(drawData, framebufferWidth, framebufferHeight);
 
@@ -170,32 +170,31 @@ void ImGuiRenderer::_setupPipeline() {
   const auto program = m_renderContext.createGraphicsProgram(
     shaderCodeBuilder.build("UI.vert"), shaderCodeBuilder.build("UI.frag"));
 
-  m_uiPipeline =
-    GraphicsPipeline::Builder{}
-      .setDepthStencil({
-        .depthTest = false,
-        .depthWrite = false,
-      })
-      .setRasterizerState({
-        .polygonMode = PolygonMode::Fill,
-        .cullMode = CullMode::None,
-        .scissorTest = true,
-      })
-      .setBlendState(0,
-                        {
-                          .enabled = true,
+  m_uiPipeline = GraphicsPipeline::Builder{}
+                   .setDepthStencil({
+                     .depthTest = false,
+                     .depthWrite = false,
+                   })
+                   .setRasterizerState({
+                     .polygonMode = PolygonMode::Fill,
+                     .cullMode = CullMode::None,
+                     .scissorTest = true,
+                   })
+                   .setBlendState(0,
+                                  {
+                                    .enabled = true,
 
-                          .srcColor = BlendFactor::SrcAlpha,
-                          .destColor = BlendFactor::OneMinusSrcAlpha,
-                          .colorOp = BlendOp::Add,
+                                    .srcColor = BlendFactor::SrcAlpha,
+                                    .destColor = BlendFactor::OneMinusSrcAlpha,
+                                    .colorOp = BlendOp::Add,
 
-                          .srcAlpha = BlendFactor::One,
-                          .destAlpha = BlendFactor::OneMinusSrcAlpha,
-                          .alphaOp = BlendOp::Add,
-                        })
-      .setVertexArray(vao)
-      .setShaderProgram(program)
-      .build();
+                                    .srcAlpha = BlendFactor::One,
+                                    .destAlpha = BlendFactor::OneMinusSrcAlpha,
+                                    .alphaOp = BlendOp::Add,
+                                  })
+                   .setVertexArray(vao)
+                   .setShaderProgram(program)
+                   .build();
 }
 
 void ImGuiRenderer::_setupRenderState(const ImDrawData *drawData, float w,

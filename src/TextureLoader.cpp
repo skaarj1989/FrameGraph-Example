@@ -45,7 +45,7 @@ std::shared_ptr<Texture> loadTexture(const std::filesystem::path &p,
   }
 
   uint32_t numMipLevels{1u};
-  if (isPowerOf2(width) and isPowerOf2(height))
+  if (isPowerOf2(width) && isPowerOf2(height))
     numMipLevels = calcMipLevels(glm::max(width, height));
 
   auto texture = rc.createTexture2D(

@@ -108,7 +108,7 @@ private:
 getFirstDirectionalLight(std::span<const Light *> lights) {
   const auto it =
     std::find_if(lights.begin(), lights.end(), [](const auto *light) {
-      return light->type == LightType::Directional and light->castsShadow;
+      return light->type == LightType::Directional && light->castsShadow;
     });
   return it != lights.end() ? *it : nullptr;
 }
@@ -233,7 +233,7 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
                               std::span<const Light> lights,
                               std::span<const Renderable> renderables,
                               float deltaTime) {
-  if (resolution.width == 0 or resolution.height == 0) return;
+  if (resolution.width == 0 || resolution.height == 0) return;
 
   FrameGraph fg;
   FrameGraphBlackboard blackboard;
@@ -314,7 +314,7 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
 
   sceneColor.ldr = m_gammaCorrectionPass.addPass(fg, sceneColor.ldr);
 
-  if (hasShadows and (settings.debugFlags & DebugFlag_CascadeSplits))
+  if (hasShadows && (settings.debugFlags & DebugFlag_CascadeSplits))
     sceneColor.ldr =
       m_shadowRenderer.visualizeCascades(fg, blackboard, sceneColor.ldr);
 

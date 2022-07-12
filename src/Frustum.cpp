@@ -7,7 +7,7 @@ namespace {
 [[nodiscard]] bool coneBehindPlane(const Cone &cone, const Plane &plane) {
   const auto m = glm::cross(glm::cross(plane.normal, cone.d), cone.d);
   const auto Q = cone.T + cone.d * cone.h - m * cone.r;
-  return plane.distanceTo(cone.T) < 0 and plane.distanceTo(Q) < 0;
+  return plane.distanceTo(cone.T) < 0 && plane.distanceTo(Q) < 0;
 }
 
 } // namespace
@@ -81,7 +81,7 @@ bool Frustum::testCone(const Cone &cone) const {
       coneBehindPlane(cone, m_planes[FrustumSide::Far])) {
     inside = false;
   }
-  for (uint32_t i{0}; i < 4 and inside; ++i)
+  for (uint32_t i{0}; i < 4 && inside; ++i)
     inside = !coneBehindPlane(cone, m_planes[i]);
 
   return inside;
