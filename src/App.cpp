@@ -2,7 +2,7 @@
 #include "GLFW/glfw3.h"
 #include "Math.hpp"
 #include "LightUtility.hpp"
-#include "MaterialLoader.hpp"
+
 #include "TextureLoader.hpp"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -159,16 +159,15 @@ App::App(const Config &config) {
   m_basicShapes = std::make_unique<BasicShapes>(*m_renderContext);
   m_cubemapConverter = std::make_unique<CubemapConverter>(*m_renderContext);
 
+  m_textureCache = std::make_unique<TextureCache>(*m_renderContext);
+  m_materialCache = std::make_unique<MaterialCache>(*m_textureCache);
+
   _setupUi();
   _setupScene();
 }
 App::~App() {
   m_uiRenderer.reset();
   ImGui::DestroyContext();
-
-  for (auto &[_, material] : m_materials)
-    for (auto &[_, texture] : material->getDefaultTextures())
-      m_renderContext->destroy(*texture);
 
   m_basicShapes.reset();
   m_renderer.reset();
@@ -292,10 +291,15 @@ void App::_setupScene() {
   m_renderContext->destroy(*equirectangular);
   m_renderer->setSkybox(m_skybox);
 
-  _loadMaterial("stone_block_wall");
+  const auto loadMaterial = [&cache =
+                               *m_materialCache](const std::string_view name) {
+    return cache.load(kAssetsDir /
+                      std::format("materials/{0}/{0}.material", name));
+  };
+
+  auto stoneBlockWallMaterial = loadMaterial("stone_block_wall");
   _addRenderable(m_basicShapes->getPlane(), {0.0f, -1.5f, 0.0f},
-                 *m_materials["stone_block_wall"].get(),
-                 MaterialFlag_ReceiveShadow);
+                 *stoneBlockWallMaterial, MaterialFlag_ReceiveShadow);
 
   // clang-format off
   const std::vector<std::string> materialNames{
@@ -308,21 +312,21 @@ void App::_setupScene() {
     "frosted_glass",
 #endif
     "floor_tiles",
-  };
+  }; 
   // clang-format on
 
-  for (const auto &name : materialNames)
-    _loadMaterial(name);
+  std::vector<std::reference_wrapper<const Material>> materials;
+  std::transform(
+    materialNames.cbegin(), materialNames.cend(),
+    std ::back_inserter(materials),
+    [loadMaterial](const std::string_view name) -> const Material & {
+      return *loadMaterial(name);
+    });
 
-  _createTower({3, 3, 3}, 2.5f, {0.0f, -2.5f, 0.0f}, materialNames);
+  _createTower({3, 3, 3}, 2.5f, {0.0f, -2.5f, 0.0f}, materials);
 
   _createSun();
   //_spawnPointLights(10, 10, 2.0f);
-}
-void App::_loadMaterial(const std::string_view name) {
-  m_materials[name.data()] =
-    loadMaterial(kAssetsDir / std::format("materials/{0}/{0}.material", name),
-                 *m_renderContext);
 }
 
 void App::_addRenderable(const Mesh &mesh, const glm::vec3 &position,
@@ -337,9 +341,9 @@ void App::_addRenderable(const Mesh &mesh, const glm::vec3 &position,
   });
 }
 
-void App::_createTower(const glm::ivec3 &dimensions, float spacing,
-                       const glm::vec3 &startPosition,
-                       std::span<const std::string> materialNames) {
+void App::_createTower(
+  const glm::ivec3 &dimensions, float spacing, const glm::vec3 &startPosition,
+  std::span<std::reference_wrapper<const Material>> materials) {
   std::random_device rd{};
   std::default_random_engine gen{rd()};
 
@@ -351,8 +355,9 @@ void App::_createTower(const glm::ivec3 &dimensions, float spacing,
         const glm::vec3 localPosition{(col - (dimensions.x / 2)) * spacing,
                                       row * spacing + spacing,
                                       (z - (dimensions.z / 2)) * spacing};
-        auto *material = m_materials[getRandomOf(gen, materialNames)].get();
-        _addRenderable(mesh, startPosition + localPosition, *material);
+        auto material = getRandomOf(gen, materials);
+        // auto *material = m_materials[getRandomOf(gen, materialNames)].get();
+        _addRenderable(mesh, startPosition + localPosition, material.get());
       }
 }
 

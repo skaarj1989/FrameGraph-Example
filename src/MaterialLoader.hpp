@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Material.hpp"
-#include <filesystem>
-
-class RenderContext;
+#include "TextureCache.hpp"
 
 [[nodiscard]] std::shared_ptr<Material>
-loadMaterial(const std::filesystem::path &, RenderContext &);
+loadMaterial(const std::filesystem::path &, TextureCache &);
