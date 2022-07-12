@@ -118,8 +118,8 @@ void cameraController(PerspectiveCamera &camera, const ImVec2 &mouseDelta,
 }
 
 [[nodiscard]] auto getRandomOf(std::default_random_engine &gen,
-                               auto &&container) {
-  const std::uniform_int_distribution<std::size_t> d{0, container.size() - 1};
+                               auto container) {
+  std::uniform_int_distribution<std::size_t> d{0u, container.size() - 1u};
   return *std::next(container.begin(), d(gen));
 }
 
@@ -366,7 +366,7 @@ void App::_createSun() {
   });
 }
 void App::_spawnPointLights(uint16_t width, uint16_t depth, float step) {
-  const std::uniform_real_distribution<float> dist{0.0f, 1.0f};
+  std::uniform_real_distribution<float> dist{0.0f, 1.0f};
   std::random_device rd{};
   std::default_random_engine gen{rd()};
 
