@@ -172,6 +172,15 @@ public:
                       OptionalReference<const IndexBuffer>,
                       const GeometryInfo &, uint32_t numInstances = 1);
 
+  struct ResourceDeleter {
+    void operator()(auto *ptr) {
+      m_renderContext.destroy(*ptr);
+      delete ptr;
+    }
+
+    RenderContext &m_renderContext;
+  };
+
 public:
   void _setupDebugCallback();
   static void _debugCallback(GLenum source, GLenum type, GLuint id,

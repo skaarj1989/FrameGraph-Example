@@ -60,5 +60,6 @@ std::shared_ptr<Texture> loadTexture(const std::filesystem::path &p,
   stbi_image_free(pixels);
 
   if (numMipLevels > 1) rc.generateMipmaps(texture);
-  return std::make_shared<Texture>(std::move(texture));
+  return std::shared_ptr<Texture>(new Texture{std::move(texture)},
+                                  RenderContext::ResourceDeleter{rc});
 }
