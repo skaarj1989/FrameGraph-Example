@@ -28,6 +28,7 @@ Downsampler::Downsampler(RenderContext &rc) : m_renderContext{rc} {
                  })
                  .build();
 }
+Downsampler::~Downsampler() { m_renderContext.destroy(m_pipeline); }
 
 FrameGraphResource
 Downsampler::addPass(FrameGraph &fg, FrameGraphResource input, uint32_t level) {

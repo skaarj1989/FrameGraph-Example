@@ -8,6 +8,7 @@ class Upsampler final {
 
 public:
   explicit Upsampler(RenderContext &);
+  ~Upsampler();
 
   [[nodiscard]] FrameGraphResource
   addPass(FrameGraph &, FrameGraphResource input, float radius);

@@ -49,7 +49,7 @@ FrameGraphResource WireframePass::addGeometryPass(
           *renderable;
 
         rc.setGraphicsPipeline(_getPipeline(*mesh.vertexFormat, nullptr))
-          .setUniformMat4("u_Transform.modelViewProj",
+          .setUniformMat4("u_Transform.modelViewProjMatrix",
                           camera->getViewProjection() * modelMatrix)
           .draw(*mesh.vertexBuffer, *mesh.indexBuffer,
                 mesh.subMeshes[subMeshIndex].geometryInfo);

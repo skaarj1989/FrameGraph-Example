@@ -6,6 +6,7 @@
 class Bloom {
 public:
   explicit Bloom(RenderContext &);
+  ~Bloom();
 
   [[nodiscard]] FrameGraphResource
   resample(FrameGraph &, FrameGraphResource input, float radius);

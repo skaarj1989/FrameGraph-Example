@@ -29,6 +29,7 @@ Bloom::Bloom(RenderContext &rc)
                  })
                  .build();
 }
+Bloom::~Bloom() { m_renderContext.destroy(m_pipeline); }
 
 FrameGraphResource Bloom::resample(FrameGraph &fg, FrameGraphResource input,
                                    float radius) {

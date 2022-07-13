@@ -29,6 +29,7 @@ Upsampler::Upsampler(RenderContext &rc) : m_renderContext{rc} {
                  })
                  .build();
 }
+Upsampler::~Upsampler() { m_renderContext.destroy(m_pipeline); }
 
 FrameGraphResource Upsampler::addPass(FrameGraph &fg, FrameGraphResource input,
                                       float radius) {

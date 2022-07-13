@@ -6,6 +6,7 @@
 class Downsampler {
 public:
   explicit Downsampler(RenderContext &);
+  ~Downsampler();
 
   [[nodiscard]] FrameGraphResource
   addPass(FrameGraph &, FrameGraphResource input, uint32_t level);
