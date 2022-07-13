@@ -9,6 +9,9 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 
+#include "glm/gtx/rotate_vector.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 #include "spdlog/spdlog.h"
 
 #include "Tracy.hpp"
@@ -189,6 +192,7 @@ void App::run() {
   while (!glfwWindowShouldClose(m_window)) {
     const auto beginTicks = clock::now();
     glfwPollEvents();
+    _processInput();
 
     io.DeltaTime = deltaTime.count();
     const auto swapchainExtent = _getSwapchainExtent();
@@ -203,18 +207,18 @@ void App::run() {
       m_mouseJustPressed[i] = false;
     }
 
+    ImGui::NewFrame();
+
     m_camera.setPerspective(
       60.0f, static_cast<float>(swapchainExtent.width) / swapchainExtent.height,
       0.1f, 1000.0f);
 
-    _processInput();
     if (!io.WantCaptureMouse)
       cameraController(m_camera, io.MousePos - lastMousePos, io.MouseDown);
     lastMousePos = io.MousePos;
 
     _update(deltaTime);
 
-    ImGui::NewFrame();
     showMetricsOverlay();
     renderSettingsWidget(m_renderSettings);
 
@@ -289,7 +293,7 @@ void App::_setupScene() {
   m_renderContext->destroy(*equirectangular);
   m_renderer->setSkybox(m_skybox);
 
-#if 0
+#if 1
   const auto loadMaterial = [&cache =
                                *m_materialCache](const std::string_view name) {
     return cache.load(kAssetsDir /
@@ -404,7 +408,41 @@ void App::_spawnPointLights(uint16_t width, uint16_t depth, float step) {
   }
 }
 
-void App::_update(fsec dt) {}
+void App::_update(fsec dt) {
+  if (ImGui::Begin("Scene")) {
+    if (ImGui::CollapsingHeader("Camera")) {
+      const auto &position = m_camera.getPosition();
+      ImGui::Text("Position = [%.2f, %.2f, %.2f]", position.x, position.y,
+                  position.z);
+      const auto &forward = m_camera.getForward();
+      ImGui::Text("Direction = [%.2f, %.2f, %.2f]", forward.x, forward.y,
+                  forward.z);
+    }
+
+    if (auto *light = m_lights.empty() ? nullptr : &m_lights.front(); light) {
+      if (ImGui::CollapsingHeader("Sun")) {
+        if (glm::vec4 color{light->color, light->intensity};
+            ImGui::ColorEdit4("Color", glm::value_ptr(color))) {
+          light->color = glm::vec3{color};
+          light->intensity = color.a;
+        }
+
+        if (ImGui::Button("Pilot")) {
+          light->direction = m_camera.getForward();
+        }
+        ImGui::SameLine();
+        static bool animate{false};
+        if (ImGui::Button("Animate")) animate = !animate;
+
+        if (animate) {
+          auto &direction = light->direction;
+          direction = glm::rotateY(direction, glm::radians(15.0f) * dt.count());
+        }
+      }
+    }
+  }
+  ImGui::End();
+}
 void App::_processInput() {
   if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(m_window, true);
