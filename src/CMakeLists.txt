@@ -72,6 +72,11 @@ add_executable(
   "ShadowCascadesBuilder.hpp"
   "ShadowCascadesBuilder.cpp"
 
+  "UploadFrameBlock.hpp"
+  "UploadFrameBlock.cpp"
+  "UploadLights.hpp"
+  "UploadLights.cpp"
+
   # -- Passes:
   "Passes/BaseGeometryPass.hpp"
   "Passes/BaseGeometryPass.cpp"
@@ -105,6 +110,10 @@ add_executable(
   "Passes/GammaCorrectionPass.cpp"
   "Passes/Vignette.hpp"
   "Passes/Vignette.cpp"
+  "Passes/Blit.hpp"
+  "Passes/Blit.cpp"
+  "Passes/FinalPass.hpp"
+  "Passes/FinalPass.cpp"
 
   # ---
   "AABB.hpp"

@@ -1,15 +1,11 @@
 #pragma once
 
-#include "fg/FrameGraphResource.hpp"
+#include "fg/Fwd.hpp"
 #include "../RenderContext.hpp"
-
-class FrameGraph;
-class FrameGraphBlackboard;
 
 class DeferredLightingPass {
 public:
-  DeferredLightingPass(RenderContext &, uint32_t maxNumLights,
-                       uint32_t tileSize);
+  DeferredLightingPass(RenderContext &, uint32_t tileSize);
   ~DeferredLightingPass();
 
   [[nodiscard]] FrameGraphResource addPass(FrameGraph &,

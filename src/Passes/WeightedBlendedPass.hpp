@@ -1,5 +1,6 @@
 #pragma once
 
+#include "fg/Fwd.hpp"
 #include "BaseGeometryPass.hpp"
 #include <span>
 
@@ -8,8 +9,7 @@ class FrameGraphBlackboard;
 
 class WeightedBlendedPass final : public BaseGeometryPass {
 public:
-  WeightedBlendedPass(RenderContext &, uint32_t maxNumLights,
-                      uint32_t tileSize);
+  WeightedBlendedPass(RenderContext &, uint32_t tileSize);
   ~WeightedBlendedPass() = default;
 
   void addPass(FrameGraph &, FrameGraphBlackboard &, const PerspectiveCamera &,
@@ -20,5 +20,5 @@ private:
                                            const Material *) final;
 
 private:
-  const uint32_t m_maxNumLights, m_tileSize;
+  const uint32_t m_tileSize;
 };

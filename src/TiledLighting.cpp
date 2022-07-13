@@ -30,9 +30,8 @@ static_assert(sizeof(GPUFrustumTile) == 64);
 // TiledLighting class:
 //
 
-TiledLighting::TiledLighting(RenderContext &rc, uint32_t maxNumLights,
-                             uint32_t tileSize)
-    : m_renderContext{rc}, m_maxNumLights{maxNumLights}, m_tileSize{tileSize} {
+TiledLighting::TiledLighting(RenderContext &rc, uint32_t tileSize)
+    : m_renderContext{rc}, m_tileSize{tileSize} {
   _setupPipelines();
 }
 TiledLighting::~TiledLighting() {
@@ -63,7 +62,6 @@ void TiledLighting::_setupPipelines() {
 
   m_cullLightsProgram = m_renderContext.createComputeProgram(
     shaderCodeBuilder
-      .addDefine("MAX_NUM_LIGHTS", m_maxNumLights)
       // 0 = Disabled, 1 = Heatmap, 2 = Depth
       .addDefine("_DEBUG_OUTPUT", kUseDebugOutput ? 1 : 0)
       .build("LightCulling/CullLights.comp"));

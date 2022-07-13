@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fg/FrameGraphResource.hpp"
+#include "fg/Fwd.hpp"
 #include "BaseGeometryPass.hpp"
 #include <span>
 

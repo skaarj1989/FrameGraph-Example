@@ -3,13 +3,13 @@
 #include "fg/Fwd.hpp"
 #include "../RenderContext.hpp"
 
-class BrightPass {
+class Blit {
 public:
-  explicit BrightPass(RenderContext &);
-  ~BrightPass();
+  explicit Blit(RenderContext &);
+  ~Blit();
 
   [[nodiscard]] FrameGraphResource
-  addPass(FrameGraph &, FrameGraphResource source, float threshold);
+  addColor(FrameGraph &, FrameGraphResource target, FrameGraphResource source);
 
 private:
   RenderContext &m_renderContext;

@@ -5,7 +5,7 @@ const uint LightType_Directional = 0;
 const uint LightType_Spot = 1;
 const uint LightType_Point = 2;
 
-// GPULight in WorldRenderer.cpp
+// GPULight in UploadLights.cpp
 struct Light {
   vec4 position;  // [point/spot] .xyz = position, .w = range
   vec4 direction; // [spot/directional] from light, normalized
@@ -18,8 +18,9 @@ struct Light {
 
 #define _DECLARE_LIGHT_BUFFER(index, name)                                     \
   layout(binding = index, std430) restrict readonly buffer LightBuffer {       \
-    Light data[MAX_NUM_LIGHTS];                                                \
     uint numLights;                                                            \
+    uint _pad[3];                                                              \
+    Light data[];                                                              \
   }                                                                            \
   name
 

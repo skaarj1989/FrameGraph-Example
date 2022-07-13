@@ -3,8 +3,6 @@
 #include "fg/Fwd.hpp"
 #include "../RenderContext.hpp"
 
-class FrameGraph;
-
 class FXAA {
 public:
   explicit FXAA(RenderContext &);

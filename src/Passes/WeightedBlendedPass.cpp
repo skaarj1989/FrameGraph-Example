@@ -25,11 +25,8 @@ constexpr auto kFirstFreeTextureBinding = 5;
 
 }
 
-WeightedBlendedPass::WeightedBlendedPass(RenderContext &rc,
-                                         uint32_t maxNumLights,
-                                         uint32_t tileSize)
-    : BaseGeometryPass{rc}, m_maxNumLights{maxNumLights}, m_tileSize{tileSize} {
-}
+WeightedBlendedPass::WeightedBlendedPass(RenderContext &rc, uint32_t tileSize)
+    : BaseGeometryPass{rc}, m_tileSize{tileSize} {}
 
 void WeightedBlendedPass::addPass(FrameGraph &fg,
                                   FrameGraphBlackboard &blackboard,
@@ -155,7 +152,6 @@ WeightedBlendedPass::_createBasePassPipeline(const VertexFormat &vertexFormat,
       .addDefine("SHADING_MODEL",
                  static_cast<uint32_t>(material->getShadingModel()))
       .addDefine("BLEND_MODE", static_cast<int32_t>(material->getBlendMode()))
-      .addDefine("MAX_NUM_LIGHTS", m_maxNumLights)
       .addDefine("TILED_LIGHTING", 1)
       .addDefine("TILE_SIZE", m_tileSize)
       .replace("#pragma USER_SAMPLERS",

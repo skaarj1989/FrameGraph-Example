@@ -333,7 +333,7 @@ void App::_setupScene() {
 #endif
 
   _createSun();
-  //_spawnPointLights(10, 10, 2.0f);
+  _spawnPointLights(10, 10, 2.0f);
 }
 
 void App::_addRenderable(

@@ -50,10 +50,12 @@ struct TileData {
 };
 shared TileData tileData;
 
+#define MAX_NUM_LIGHTS_PER_TILE 1024
+
 struct LightBucket {
   uint lightCount;
   uint startOffset;
-  uint lightList[MAX_NUM_LIGHTS];
+  uint lightList[MAX_NUM_LIGHTS_PER_TILE];
 };
 shared LightBucket opaqueGeometry;
 shared LightBucket translucentGeometry;
@@ -61,7 +63,7 @@ shared LightBucket translucentGeometry;
 #define _APPEND_LIGHT(lightIndex, bucket)                                      \
   {                                                                            \
     uint index = atomicAdd(bucket.lightCount, 1);                              \
-    if (index < MAX_NUM_LIGHTS) bucket.lightList[index] = lightIndex;          \
+    if (index < MAX_NUM_LIGHTS_PER_TILE) bucket.lightList[index] = lightIndex; \
   }
 
 void main() {

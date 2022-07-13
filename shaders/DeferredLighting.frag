@@ -69,8 +69,10 @@ void main() {
   const float metallic = temp.r;
   const float roughness = temp.g;
   float ao = temp.b;
-  if (hasRenderFeatures(RenderFeature_SSAO))
-    ao = min(ao, texture(t_SSAO, v_TexCoord).r);
+  if (hasRenderFeatures(RenderFeature_SSAO)) {
+    // ao = min(ao, texture(t_SSAO, v_TexCoord).r);
+    ao = texture(t_SSAO, v_TexCoord).r;
+  }
 
   temp = texture(t_GBuffer1, v_TexCoord);
   const vec3 albedo = temp.rgb;
@@ -80,7 +82,7 @@ void main() {
   // Lighting calculation:
   //
 
-  // NOTE: values in view-space
+  // NOTE: values in world-space
   // N = normal (from surface)
   // L = fragment to light direction
   // V = fragment to eye direction

@@ -19,32 +19,13 @@
 #include "Passes/GammaCorrectionPass.hpp"
 #include "Passes/Vignette.hpp"
 #include "Passes/Blur.hpp"
+#include "Passes/Blit.hpp"
+#include "Passes/FinalPass.hpp"
 
 struct LightProbe {
   Texture diffuse, specular;
 };
 
-enum class OutputMode : uint32_t {
-  Depth = 0,
-  Emissive,
-  BaseColor,
-  Normal,
-  Metallic,
-  Roughness,
-  AmbientOcclusion,
-
-  SSAO,
-  BrightColor,
-  Reflections,
-
-  Accum,
-  Reveal,
-
-  LightHeatmap,
-
-  HDR,
-  FinalImage,
-};
 enum RenderFeature_ : uint32_t {
   RenderFeature_None = 0,
 
@@ -92,22 +73,6 @@ public:
                  std::span<const Renderable>, float deltaTime);
 
 private:
-  void _setupPipelines();
-
-  struct FrameInfo {
-    float deltaTime;
-    Extent2D resolution;
-    const PerspectiveCamera &camera;
-    uint32_t features;
-  };
-  void _uploadFrameBlock(FrameGraph &, FrameGraphBlackboard &,
-                         const FrameInfo &);
-
-  [[nodiscard]] FrameGraphResource
-  _addColor(FrameGraph &, FrameGraphResource target, FrameGraphResource source);
-  void _present(FrameGraph &, FrameGraphBlackboard &, OutputMode);
-
-private:
   RenderContext &m_renderContext;
 
   float m_time{0.0f};
@@ -145,7 +110,7 @@ private:
   VignettePass m_vignettePass;
 
   Blur m_blur;
+  Blit m_blit;
 
-  GraphicsPipeline m_blitPipeline;
-  GraphicsPipeline m_additiveBlitPipeline;
+  FinalPass m_finalPass;
 };

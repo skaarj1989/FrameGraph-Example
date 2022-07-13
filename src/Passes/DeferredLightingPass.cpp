@@ -19,17 +19,14 @@
 
 #include "TracyOpenGL.hpp"
 
-DeferredLightingPass::DeferredLightingPass(RenderContext &rc,
-                                           uint32_t maxNumLights,
-                                           uint32_t tileSize)
+DeferredLightingPass::DeferredLightingPass(RenderContext &rc, uint32_t tileSize)
     : m_renderContext{rc} {
   ShaderCodeBuilder shaderCodeBuilder;
-  const auto program = rc.createGraphicsProgram(
-    shaderCodeBuilder.build("FullScreenTriangle.vert"),
-    shaderCodeBuilder.addDefine("MAX_NUM_LIGHTS", maxNumLights)
-      .addDefine("TILED_LIGHTING", 1)
-      .addDefine("TILE_SIZE", tileSize)
-      .build("DeferredLighting.frag"));
+  const auto program =
+    rc.createGraphicsProgram(shaderCodeBuilder.build("FullScreenTriangle.vert"),
+                             shaderCodeBuilder.addDefine("TILED_LIGHTING", 1)
+                               .addDefine("TILE_SIZE", tileSize)
+                               .build("DeferredLighting.frag"));
 
   m_pipeline = GraphicsPipeline::Builder{}
                  .setDepthStencil({

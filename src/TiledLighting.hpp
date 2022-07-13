@@ -1,14 +1,11 @@
 #pragma once
 
-#include "fg/FrameGraphResource.hpp"
+#include "fg/Fwd.hpp"
 #include "RenderContext.hpp"
-
-class FrameGraph;
-class FrameGraphBlackboard;
 
 class TiledLighting {
 public:
-  TiledLighting(RenderContext &, uint32_t maxNumLights, uint32_t tileSize);
+  TiledLighting(RenderContext &, uint32_t tileSize);
   ~TiledLighting();
 
   void cullLights(FrameGraph &, FrameGraphBlackboard &);
@@ -28,7 +25,7 @@ private:
 private:
   RenderContext &m_renderContext;
 
-  const uint32_t m_tileSize, m_maxNumLights;
+  const uint32_t m_tileSize;
 
   GLuint m_buildFrustumsProgram{GL_NONE};
   GLuint m_cullLightsProgram{GL_NONE};

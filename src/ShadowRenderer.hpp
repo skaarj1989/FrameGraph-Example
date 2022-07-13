@@ -1,12 +1,9 @@
 #pragma once
 
-#include "fg/FrameGraphResource.hpp"
+#include "fg/Fwd.hpp"
 #include "Passes/BaseGeometryPass.hpp"
 #include "Light.hpp"
 #include <span>
-
-class FrameGraph;
-class FrameGraphBlackboard;
 
 class ShadowRenderer final : public BaseGeometryPass {
 public:

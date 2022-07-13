@@ -1,9 +1,7 @@
 #pragma once
 
+#include "fg/Fwd.hpp"
 #include "../RenderContext.hpp"
-
-class FrameGraph;
-class FrameGraphBlackboard;
 
 class SSAO {
 public:

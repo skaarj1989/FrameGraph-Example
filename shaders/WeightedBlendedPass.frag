@@ -55,6 +55,9 @@ void main() {
 #if SHADING_MODEL == SHADING_MODEL_UNLIT
   const vec3 color = material.emissiveColor;
 #else
+  const vec3 fragPosViewSpace =
+    (u_Frame.camera.view * vec4(fs_in.fragPos.xyz, 1.0)).xyz;
+
   const vec3 N = normalize(material.normal);
   const vec3 V = normalize(getCameraPosition() - fs_in.fragPos.xyz);
   const float NdotV = clamp01(dot(N, V));
