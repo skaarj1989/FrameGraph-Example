@@ -172,6 +172,8 @@ public:
                       OptionalReference<const IndexBuffer>,
                       const GeometryInfo &, uint32_t numInstances = 1);
 
+  [[nodiscard]] Extent2D getSwapchainSize() const;
+
   struct ResourceDeleter {
     void operator()(auto *ptr) {
       m_renderContext.destroy(*ptr);

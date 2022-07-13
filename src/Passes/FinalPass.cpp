@@ -143,7 +143,7 @@ void FinalPass::compose(FrameGraph &fg, const FrameGraphBlackboard &blackboard,
       const auto extent =
         resources.getDescriptor<FrameGraphTexture>(output).extent;
       auto &rc = *static_cast<RenderContext *>(ctx);
-      rc.beginRendering({.extent = extent}, glm::vec4{0.0f});
+      rc.beginRendering({.extent = rc.getSwapchainSize()}, glm::vec4{0.0f});
       if (mode != Mode_Discard) {
         rc.setGraphicsPipeline(m_pipeline)
           .bindUniformBuffer(0, getBuffer(resources, frameBlock))

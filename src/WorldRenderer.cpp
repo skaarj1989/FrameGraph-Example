@@ -119,7 +119,7 @@ WorldRenderer::WorldRenderer(RenderContext &rc)
       m_tiledLighting{rc, kTileSize}, m_shadowRenderer{rc}, m_gBufferPass{rc},
       m_deferredLightingPass{rc, kTileSize}, m_skyboxPass{rc},
       m_weightedBlendedPass{rc, kTileSize}, m_transparencyCompositionPass{rc},
-      m_wireframePass{rc}, m_brightPass{rc}, m_ssao{rc}, m_ssr{rc},
+      m_wireframePass{rc}, m_bloom{rc}, m_ssao{rc}, m_ssr{rc},
       m_tonemapPass{rc}, m_fxaa{rc}, m_gammaCorrectionPass{rc},
       m_vignettePass{rc}, m_blur{rc}, m_blit{rc}, m_finalPass{rc} {
   m_brdf = m_ibl.generateBRDF();
@@ -198,23 +198,20 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
   sceneColor.hdr =
     m_skyboxPass.addPass(fg, blackboard, sceneColor.hdr, m_skybox);
 
+  const auto reflections = m_ssr.addPass(fg, blackboard);
+  if ((settings.renderFeatures & RenderFeature_SSR))
+    sceneColor.hdr = m_blit.addColor(fg, sceneColor.hdr, reflections);
+
   sceneColor.hdr =
     m_transparencyCompositionPass.addPass(fg, blackboard, sceneColor.hdr);
 
-  auto &brightColor = blackboard.add<BrightColorData>().brightColor;
-  brightColor =
-    m_brightPass.addPass(fg, sceneColor.hdr, settings.bloom.threshold);
-  for (uint32_t i{0}; i < settings.bloom.numPasses; ++i) {
-    brightColor =
-      m_blur.addTwoPassGaussianBlur(fg, brightColor, settings.bloom.blurScale);
+  auto &[bloom] = blackboard.add<BrightColorData>();
+  bloom = m_bloom.resample(fg, sceneColor.hdr, settings.bloom.radius);
+
+  if (settings.renderFeatures & RenderFeature_Bloom) {
+    sceneColor.hdr =
+      m_bloom.compose(fg, sceneColor.hdr, bloom, settings.bloom.strength);
   }
-
-  const auto reflections = m_ssr.addPass(fg, blackboard);
-
-  if ((settings.renderFeatures & RenderFeature_SSR))
-    sceneColor.hdr = m_blit.addColor(fg, sceneColor.hdr, reflections);
-  if (settings.renderFeatures & RenderFeature_Bloom)
-    sceneColor.hdr = m_blit.addColor(fg, sceneColor.hdr, brightColor);
 
   sceneColor.ldr = m_tonemapPass.addPass(fg, sceneColor.hdr, settings.tonemap);
   if (settings.debugFlags & DebugFlag_Wireframe) {

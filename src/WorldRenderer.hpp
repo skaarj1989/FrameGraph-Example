@@ -11,7 +11,7 @@
 #include "Passes/WeightedBlendedPass.hpp"
 #include "Passes/TransparencyCompositionPass.hpp"
 #include "Passes/WireframePass.hpp"
-#include "Passes/BrightPass.hpp"
+#include "Passes/Bloom.hpp"
 #include "Passes/SSAO.hpp"
 #include "Passes/SSR.hpp"
 #include "Passes/TonemapPass.hpp"
@@ -53,9 +53,8 @@ struct RenderSettings {
   OutputMode outputMode{OutputMode::FinalImage};
   uint32_t renderFeatures{RenderFeature_Default};
   struct {
-    float threshold{1.2f};
-    int32_t numPasses{5};
-    float blurScale{1.4f};
+    float radius{0.005f};
+    float strength{0.04f};
   } bloom;
   Tonemap tonemap{Tonemap::ACES};
   uint32_t debugFlags{0u};
@@ -100,7 +99,7 @@ private:
 
   WireframePass m_wireframePass;
 
-  BrightPass m_brightPass;
+  Bloom m_bloom;
   SSAO m_ssao;
   SSR m_ssr;
 

@@ -629,6 +629,13 @@ RenderContext::draw(OptionalReference<const VertexBuffer> vertexBuffer,
   return *this;
 }
 
+Extent2D RenderContext::getSwapchainSize() const {
+  int32_t w;
+  int32_t h;
+  glfwGetFramebufferSize(glfwGetCurrentContext(), &w, &h);
+  return {.width = uint32_t(w), .height = uint32_t(h)};
+}
+
 void RenderContext::_setupDebugCallback() {
 #ifdef _DEBUG
   glDebugMessageCallback(_debugCallback, nullptr);

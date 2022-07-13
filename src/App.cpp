@@ -57,11 +57,8 @@ void renderSettingsWidget(RenderSettings &settings) {
 
     ImGui::CheckboxFlags("Bloom", &settings.renderFeatures,
                          RenderFeature_Bloom);
-    ImGui::SliderFloat("Threshold", &settings.bloom.threshold, 0.1f, 10.0f);
-    ImGui::SliderInt("NumPasses", &settings.bloom.numPasses, 1, 10);
-    constexpr auto kMaxBlurScale = 4.5f;
-    ImGui::SliderFloat("BlurScale", &settings.bloom.blurScale, 0.1f,
-                       kMaxBlurScale);
+    ImGui::SliderFloat("Radius", &settings.bloom.radius, 0.001f, 1.0f);
+    ImGui::SliderFloat("Strength", &settings.bloom.strength, 0.001f, 1.0f);
 
     ImGui::Separator();
 
@@ -333,7 +330,7 @@ void App::_setupScene() {
 #endif
 
   _createSun();
-  _spawnPointLights(10, 10, 2.0f);
+  //_spawnPointLights(10, 10, 2.0f);
 }
 
 void App::_addRenderable(

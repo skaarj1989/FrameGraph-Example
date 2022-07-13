@@ -70,8 +70,8 @@ void main() {
   const float roughness = temp.g;
   float ao = temp.b;
   if (hasRenderFeatures(RenderFeature_SSAO)) {
-    // ao = min(ao, texture(t_SSAO, v_TexCoord).r);
-    ao = texture(t_SSAO, v_TexCoord).r;
+    ao = min(ao, texture(t_SSAO, v_TexCoord).r);
+    // ao = texture(t_SSAO, v_TexCoord).r;
   }
 
   temp = texture(t_GBuffer1, v_TexCoord);
