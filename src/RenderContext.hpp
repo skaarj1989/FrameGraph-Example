@@ -82,8 +82,9 @@ public:
 
   [[nodiscard]] GLuint getVertexArray(const VertexAttributes &);
 
-  [[nodiscard]] GLuint createGraphicsProgram(const std::string_view vertCode,
-                                             const std::string_view fragCode);
+  [[nodiscard]] GLuint createGraphicsProgram(
+    const std::string_view vertCode, const std::string_view fragCode,
+    std::optional<const std::string_view> geomCode = std::nullopt);
   [[nodiscard]] GLuint createComputeProgram(const std::string_view code);
 
   [[nodiscard]] Texture createTexture2D(Extent2D extent, PixelFormat,

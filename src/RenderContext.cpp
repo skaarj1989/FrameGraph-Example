@@ -157,10 +157,12 @@ GLuint RenderContext::getVertexArray(const VertexAttributes &attributes) {
   return it->second;
 }
 
-GLuint RenderContext::createGraphicsProgram(const std::string_view vertCode,
-                                            const std::string_view fragCode) {
+GLuint RenderContext::createGraphicsProgram(
+  const std::string_view vertCode, const std::string_view fragCode,
+  std::optional<const std::string_view> geomCode) {
   return _createShaderProgram({
     _createShader(GL_VERTEX_SHADER, vertCode),
+    geomCode ? _createShader(GL_GEOMETRY_SHADER, *geomCode) : GL_NONE,
     _createShader(GL_FRAGMENT_SHADER, fragCode),
   });
 }
@@ -858,7 +860,7 @@ RenderContext::_createShaderProgram(std::initializer_list<GLuint> shaders) {
   const auto program = glCreateProgram();
 
   for (auto shader : shaders)
-    glAttachShader(program, shader);
+    if (shader != GL_NONE) glAttachShader(program, shader);
 
   glLinkProgram(program);
 
@@ -873,8 +875,10 @@ RenderContext::_createShaderProgram(std::initializer_list<GLuint> shaders) {
     throw std::runtime_error{infoLog};
   }
   for (auto shader : shaders) {
-    glDetachShader(program, shader);
-    glDeleteShader(shader);
+    if (shader != GL_NONE) {
+      glDetachShader(program, shader);
+      glDeleteShader(shader);
+    }
   }
 
   return program;
