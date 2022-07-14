@@ -14,7 +14,7 @@ LightContribution IBL_AmbientLighting(vec3 diffuseColor, vec3 F0,
 
   // -- Diffuse IBL:
 
-  const vec3 irradiance = texture(t_IrradianceMap, N).rgb;
+  const vec3 irradiance = textureLod(t_IrradianceMap, N, 0.0).rgb;
 
   vec3 FssEss = specularWeight * k_S * f_ab.x + f_ab.y;
 

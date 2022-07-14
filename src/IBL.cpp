@@ -53,7 +53,10 @@ Texture IBL::generateBRDF() {
 
   const RenderingInfo renderingInfo{
     .area = {.extent = {kSize, kSize}},
-    .colorAttachments = {{.image = brdf}},
+    .colorAttachments = {{
+      .image = brdf,
+      .clearValue = glm::vec4{0.0f},
+    }},
   };
   const auto framebuffer = m_renderContext.beginRendering(renderingInfo);
   m_renderContext.setGraphicsPipeline(m_brdfPipeline)
@@ -70,7 +73,7 @@ Texture IBL::generateIrradiance(const Texture &cubemap) {
 
   constexpr auto kSize = 64u;
   auto irradiance =
-    m_renderContext.createCubemap(kSize, PixelFormat::RGB16F, 0);
+    m_renderContext.createCubemap(kSize, PixelFormat::RGB16F, 1);
   m_renderContext.setupSampler(
     irradiance, {
                   .minFilter = TexelFilter::Linear,
@@ -87,6 +90,7 @@ Texture IBL::generateIrradiance(const Texture &cubemap) {
       .colorAttachments = {AttachmentInfo{
         .image = irradiance,
         .face = face,
+        .clearValue = glm::vec4{0.0f},
       }},
     };
     const auto framebuffer = m_renderContext.beginRendering(renderingInfo);
@@ -96,8 +100,6 @@ Texture IBL::generateIrradiance(const Texture &cubemap) {
       .drawCube()
       .endRendering(framebuffer);
   }
-  m_renderContext.generateMipmaps(irradiance);
-
   return irradiance;
 }
 Texture IBL::prefilterEnvMap(const Texture &cubemap) {
@@ -108,6 +110,7 @@ Texture IBL::prefilterEnvMap(const Texture &cubemap) {
   constexpr auto kSize = 512u;
   auto prefilteredEnvMap =
     m_renderContext.createCubemap(kSize, PixelFormat::RGB16F, 0);
+  const auto numMipLevels = prefilteredEnvMap.getNumMipLevels();
   m_renderContext.setupSampler(
     prefilteredEnvMap, {
                          .minFilter = TexelFilter::Linear,
@@ -118,7 +121,7 @@ Texture IBL::prefilterEnvMap(const Texture &cubemap) {
                          .addressModeR = SamplerAddressMode::ClampToEdge,
                        });
 
-  for (uint8_t level{0}; level < prefilteredEnvMap.getNumMipLevels(); ++level) {
+  for (uint8_t level{0}; level < numMipLevels; ++level) {
     const auto mipSize = calcMipSize(glm::uvec3{kSize, kSize, 1u}, level).x;
     for (uint8_t face{0}; face < 6; ++face) {
       const RenderingInfo renderingInfo{
@@ -127,20 +130,20 @@ Texture IBL::prefilterEnvMap(const Texture &cubemap) {
           .image = prefilteredEnvMap,
           .mipLevel = level,
           .face = face,
+          .clearValue = glm::vec4{0.0f},
         }},
       };
+      const float roughness = static_cast<float>(level) / (numMipLevels - 1u);
+
       const auto framebuffer = m_renderContext.beginRendering(renderingInfo);
       m_renderContext.setGraphicsPipeline(m_prefilterEnvMapPipeline)
         .bindTexture(0, cubemap)
-        .setUniform1f("u_Roughness",
-                      static_cast<float>(level) /
-                        (prefilteredEnvMap.getNumMipLevels() - 1u))
+        .setUniform1f("u_Roughness", roughness)
         .setUniformMat4("u_ViewProjMatrix",
                         kCubeProjection * kCaptureViews[face])
         .drawCube()
         .endRendering(framebuffer);
     }
   }
-
   return prefilteredEnvMap;
 }

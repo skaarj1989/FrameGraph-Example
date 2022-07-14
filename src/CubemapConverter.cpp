@@ -44,11 +44,11 @@ CubemapConverter::equirectangularToCubemap(const Texture &equirectangular) {
   TracyGpuZone("Equirectangular -> Cubemap");
 
   const auto size = calculateCubeSize(equirectangular);
-  auto cubemap = m_renderContext.createCubemap(size, PixelFormat::RGB16F);
+  auto cubemap = m_renderContext.createCubemap(size, PixelFormat::RGB16F, 0);
   m_renderContext.setupSampler(
     cubemap, {
                .minFilter = TexelFilter::Linear,
-               .mipmapMode = MipmapMode::None,
+               .mipmapMode = MipmapMode::Linear,
                .magFilter = TexelFilter::Linear,
                .addressModeS = SamplerAddressMode::ClampToEdge,
                .addressModeT = SamplerAddressMode::ClampToEdge,
@@ -61,6 +61,7 @@ CubemapConverter::equirectangularToCubemap(const Texture &equirectangular) {
       .colorAttachments = {AttachmentInfo{
         .image = cubemap,
         .face = face,
+        .clearValue = glm::vec4{0.0f},
       }},
     };
     const auto framebuffer = m_renderContext.beginRendering(renderingInfo);
@@ -70,6 +71,7 @@ CubemapConverter::equirectangularToCubemap(const Texture &equirectangular) {
       .drawCube()
       .endRendering(framebuffer);
   }
+  m_renderContext.generateMipmaps(cubemap);
 
   return cubemap;
 }
