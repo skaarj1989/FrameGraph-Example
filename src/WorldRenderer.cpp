@@ -120,8 +120,8 @@ WorldRenderer::WorldRenderer(RenderContext &rc)
       m_deferredLightingPass{rc, kTileSize}, m_skyboxPass{rc},
       m_weightedBlendedPass{rc, kTileSize}, m_transparencyCompositionPass{rc},
       m_wireframePass{rc}, m_bloom{rc}, m_ssao{rc}, m_ssr{rc},
-      m_tonemapPass{rc}, m_fxaa{rc}, m_gammaCorrectionPass{rc},
-      m_vignettePass{rc}, m_blur{rc}, m_blit{rc}, m_finalPass{rc} {
+      m_tonemapPass{rc}, m_fxaa{rc}, m_vignettePass{rc}, m_blur{rc}, m_blit{rc},
+      m_finalPass{rc} {
   m_brdf = m_ibl.generateBRDF();
 }
 WorldRenderer::~WorldRenderer() {
@@ -214,6 +214,7 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
   }
 
   sceneColor.ldr = m_tonemapPass.addPass(fg, sceneColor.hdr, settings.tonemap);
+
   if (settings.debugFlags & DebugFlag_Wireframe) {
     sceneColor.ldr = m_wireframePass.addGeometryPass(
       fg, blackboard, sceneColor.ldr, camera, visibleRenderables);
@@ -221,8 +222,6 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
   const auto antiAliased = m_fxaa.addPass(fg, blackboard, sceneColor.ldr);
   if (settings.renderFeatures & RenderFeature_FXAA)
     sceneColor.ldr = antiAliased;
-
-  sceneColor.ldr = m_gammaCorrectionPass.addPass(fg, sceneColor.ldr);
 
   if (hasShadows && (settings.debugFlags & DebugFlag_CascadeSplits))
     sceneColor.ldr =

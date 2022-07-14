@@ -16,7 +16,6 @@
 #include "Passes/SSR.hpp"
 #include "Passes/TonemapPass.hpp"
 #include "Passes/FXAA.hpp"
-#include "Passes/GammaCorrectionPass.hpp"
 #include "Passes/Vignette.hpp"
 #include "Passes/Blur.hpp"
 #include "Passes/Blit.hpp"
@@ -105,7 +104,6 @@ private:
 
   TonemapPass m_tonemapPass;
   FXAA m_fxaa;
-  GammaCorrectionPass m_gammaCorrectionPass;
   VignettePass m_vignettePass;
 
   Blur m_blur;

@@ -112,8 +112,6 @@ add_executable(
   "Passes/TonemapPass.cpp"
   "Passes/FXAA.hpp"
   "Passes/FXAA.cpp"
-  "Passes/GammaCorrectionPass.hpp"
-  "Passes/GammaCorrectionPass.cpp"
   "Passes/Vignette.hpp"
   "Passes/Vignette.cpp"
   "Passes/Blit.hpp"
