@@ -293,7 +293,7 @@ void App::_setupScene() {
   m_renderContext->destroy(*equirectangular);
   m_renderer->setSkybox(m_skybox);
 
-#if 1
+#if 0
   const auto loadMaterial = [&cache =
                                *m_materialCache](const std::string_view name) {
     return cache.load(kAssetsDir /

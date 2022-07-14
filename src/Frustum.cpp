@@ -77,7 +77,7 @@ bool Frustum::testSphere(const Sphere &sphere) const {
 }
 bool Frustum::testCone(const Cone &cone) const {
   bool inside = true;
-  if (coneBehindPlane(cone, m_planes[FrustumSide::Near]) or
+  if (coneBehindPlane(cone, m_planes[FrustumSide::Near]) ||
       coneBehindPlane(cone, m_planes[FrustumSide::Far])) {
     inside = false;
   }

@@ -56,7 +56,7 @@ getVisibleShadowCasters(std::span<const Renderable> renderables,
 
   std::vector<const Renderable *> result;
   for (const auto &renderable : renderables) {
-    if ((renderable.flags & MaterialFlag_CastShadow) and
+    if ((renderable.flags & MaterialFlag_CastShadow) &&
         isOpaque(&renderable) && isVisible(renderable.aabb)) {
       result.push_back(&renderable);
     }

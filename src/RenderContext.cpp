@@ -173,7 +173,7 @@ GLuint RenderContext::createComputeProgram(const std::string_view code) {
 Texture RenderContext::createTexture2D(Extent2D extent, PixelFormat pixelFormat,
                                        uint32_t numMipLevels,
                                        uint32_t numLayers) {
-  assert(extent.width > 0 && extent.height > 0 and
+  assert(extent.width > 0 && extent.height > 0 &&
          pixelFormat != PixelFormat::Unknown);
 
   if (numMipLevels <= 0)
@@ -791,7 +791,7 @@ Texture RenderContext::_createImmutableTexture(Extent2D extent, uint32_t depth,
 
 void RenderContext::_createFaceView(Texture &cubeMap, GLuint mipLevel,
                                     GLuint layer, GLuint face) {
-  assert(cubeMap.m_type == GL_TEXTURE_CUBE_MAP or
+  assert(cubeMap.m_type == GL_TEXTURE_CUBE_MAP ||
          cubeMap.m_type == GL_TEXTURE_CUBE_MAP_ARRAY);
 
   if (cubeMap.m_view != GL_NONE) glDeleteTextures(1, &cubeMap.m_view);
@@ -976,7 +976,7 @@ void RenderContext::_setBlendState(GLuint index, const BlendState &state) {
       current.enabled = state.enabled;
     }
     if (state.enabled) {
-      if (state.colorOp != current.colorOp or
+      if (state.colorOp != current.colorOp ||
           state.alphaOp != current.alphaOp) {
         glBlendEquationSeparatei(index, static_cast<GLenum>(state.colorOp),
                                  static_cast<GLenum>(state.alphaOp));
@@ -984,9 +984,9 @@ void RenderContext::_setBlendState(GLuint index, const BlendState &state) {
         current.colorOp = state.colorOp;
         current.alphaOp = state.alphaOp;
       }
-      if (state.srcColor != current.srcColor or
-          state.destColor != current.destColor or
-          state.srcAlpha != current.srcAlpha or
+      if (state.srcColor != current.srcColor ||
+          state.destColor != current.destColor ||
+          state.srcAlpha != current.srcAlpha ||
           state.destAlpha != current.destAlpha) {
         glBlendFuncSeparatei(index, static_cast<GLenum>(state.srcColor),
                              static_cast<GLenum>(state.destColor),
