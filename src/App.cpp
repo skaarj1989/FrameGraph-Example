@@ -2,12 +2,15 @@
 #include "GLFW/glfw3.h"
 #include "Math.hpp"
 #include "LightUtility.hpp"
-#include "MaterialLoader.hpp"
+
 #include "TextureLoader.hpp"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "imgui_internal.h"
+
+#include "glm/gtx/rotate_vector.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -19,7 +22,7 @@
 
 namespace {
 
-const std::filesystem::path kAssetsDir{"../../assets/"};
+const std::filesystem::path kAssetsDir{"../assets/"};
 
 void showMetricsOverlay() {
   const auto windowFlags =
@@ -57,11 +60,8 @@ void renderSettingsWidget(RenderSettings &settings) {
 
     ImGui::CheckboxFlags("Bloom", &settings.renderFeatures,
                          RenderFeature_Bloom);
-    ImGui::SliderFloat("Threshold", &settings.bloom.threshold, 0.1f, 10.0f);
-    ImGui::SliderInt("NumPasses", &settings.bloom.numPasses, 1, 10);
-    constexpr auto kMaxBlurScale = 4.5f;
-    ImGui::SliderFloat("BlurScale", &settings.bloom.blurScale, 0.1f,
-                       kMaxBlurScale);
+    ImGui::SliderFloat("Radius", &settings.bloom.radius, 0.001f, 1.0f);
+    ImGui::SliderFloat("Strength", &settings.bloom.strength, 0.001f, 1.0f);
 
     ImGui::Separator();
 
@@ -96,7 +96,7 @@ void cameraController(PerspectiveCamera &camera, const ImVec2 &mouseDelta,
   auto yaw = camera.getYaw();
   auto pitch = camera.getPitch();
 
-  if (mouseButtons[LMB] and mouseButtons[RMB]) {
+  if (mouseButtons[LMB] && mouseButtons[RMB]) {
     // Zoom on LMB + RMB
     position -= camera.getForward() * (mouseDelta.x * kMoveSensitivity);
     position += camera.getForward() * (mouseDelta.y * kMoveSensitivity);
@@ -118,8 +118,8 @@ void cameraController(PerspectiveCamera &camera, const ImVec2 &mouseDelta,
 }
 
 [[nodiscard]] auto getRandomOf(std::default_random_engine &gen,
-                               auto &&container) {
-  const std::uniform_int_distribution<std::size_t> d{0, container.size() - 1};
+                               auto container) {
+  std::uniform_int_distribution<std::size_t> d{0u, container.size() - 1u};
   return *std::next(container.begin(), d(gen));
 }
 
@@ -159,16 +159,16 @@ App::App(const Config &config) {
   m_basicShapes = std::make_unique<BasicShapes>(*m_renderContext);
   m_cubemapConverter = std::make_unique<CubemapConverter>(*m_renderContext);
 
+  m_textureCache = std::make_unique<TextureCache>(*m_renderContext);
+  m_materialCache = std::make_unique<MaterialCache>(*m_textureCache);
+  m_meshCache = std::make_unique<MeshCache>(*m_renderContext, *m_textureCache);
+
   _setupUi();
   _setupScene();
 }
 App::~App() {
   m_uiRenderer.reset();
   ImGui::DestroyContext();
-
-  for (auto &[_, material] : m_materials)
-    for (auto &[_, texture] : material->getDefaultTextures())
-      m_renderContext->destroy(*texture);
 
   m_basicShapes.reset();
   m_renderer.reset();
@@ -189,9 +189,10 @@ void App::run() {
   auto &io = ImGui::GetIO();
   ImVec2 lastMousePos{0.0f, 0.0f};
 
-  while (not glfwWindowShouldClose(m_window)) {
+  while (!glfwWindowShouldClose(m_window)) {
     const auto beginTicks = clock::now();
     glfwPollEvents();
+    _processInput();
 
     io.DeltaTime = deltaTime.count();
     const auto swapchainExtent = _getSwapchainExtent();
@@ -202,22 +203,22 @@ void App::run() {
 
     for (int32_t i{0}; i < IM_ARRAYSIZE(io.MouseDown); ++i) {
       io.MouseDown[i] =
-        m_mouseJustPressed[i] or glfwGetMouseButton(m_window, i) != 0;
+        m_mouseJustPressed[i] || glfwGetMouseButton(m_window, i) != 0;
       m_mouseJustPressed[i] = false;
     }
+
+    ImGui::NewFrame();
 
     m_camera.setPerspective(
       60.0f, static_cast<float>(swapchainExtent.width) / swapchainExtent.height,
       0.1f, 1000.0f);
 
-    _processInput();
-    if (not io.WantCaptureMouse)
+    if (!io.WantCaptureMouse)
       cameraController(m_camera, io.MousePos - lastMousePos, io.MouseDown);
     lastMousePos = io.MousePos;
 
     _update(deltaTime);
 
-    ImGui::NewFrame();
     showMetricsOverlay();
     renderSettingsWidget(m_renderSettings);
 
@@ -292,10 +293,17 @@ void App::_setupScene() {
   m_renderContext->destroy(*equirectangular);
   m_renderer->setSkybox(m_skybox);
 
-  _loadMaterial("stone_block_wall");
-  _addRenderable(m_basicShapes->getPlane(), {0.0f, -1.5f, 0.0f},
-                 *m_materials["stone_block_wall"].get(),
-                 MaterialFlag_ReceiveShadow);
+#if 1
+  const auto loadMaterial = [&cache =
+                               *m_materialCache](const std::string_view name) {
+    return cache.load(kAssetsDir /
+                      std::format("materials/{0}/{0}.material", name));
+  };
+
+  auto stoneBlockWallMaterial = loadMaterial("stone_block_wall");
+  _addRenderable(m_basicShapes->getPlane(),
+                 glm::translate(glm::mat4{1.0f}, glm::vec3{0.0f, -1.5f, 0.0f}),
+                 *stoneBlockWallMaterial, MaterialFlag_ReceiveShadow);
 
   // clang-format off
   const std::vector<std::string> materialNames{
@@ -311,35 +319,45 @@ void App::_setupScene() {
   };
   // clang-format on
 
-  for (const auto &name : materialNames)
-    _loadMaterial(name);
+  std::vector<std::reference_wrapper<const Material>> materials;
+  std::transform(
+    materialNames.cbegin(), materialNames.cend(),
+    std ::back_inserter(materials),
+    [loadMaterial](const std::string_view name) -> const Material & {
+      return *loadMaterial(name);
+    });
 
-  _createTower({3, 3, 3}, 2.5f, {0.0f, -2.5f, 0.0f}, materialNames);
+  _createTower({3, 3, 3}, 2.5f, {0.0f, -2.5f, 0.0f}, materials);
+#else
+  auto sponza = m_meshCache->load(kAssetsDir / "meshes/Sponza/Sponza.gltf");
+  _addRenderable(*sponza, glm::scale(glm::mat4{1.0f}, glm::vec3{5.0f}), {});
+#endif
 
   _createSun();
   //_spawnPointLights(10, 10, 2.0f);
 }
-void App::_loadMaterial(const std::string_view name) {
-  m_materials[name.data()] =
-    loadMaterial(kAssetsDir / std::format("materials/{0}/{0}.material", name),
-                 *m_renderContext);
+
+void App::_addRenderable(
+  const Mesh &mesh, const glm::mat4 &m,
+  std::optional<std::reference_wrapper<const Material>> materialOverride,
+  uint8_t flags) {
+
+  auto id = 0;
+  for (auto &[_, material] : mesh.subMeshes) {
+    m_renderables.push_back(Renderable{
+      .mesh = mesh,
+      .subMeshIndex = id++,
+      .material = materialOverride ? materialOverride->get() : *material,
+      .flags = flags,
+      .modelMatrix = m,
+      .aabb = mesh.aabb.transform(m),
+    });
+  }
 }
 
-void App::_addRenderable(const Mesh &mesh, const glm::vec3 &position,
-                         const Material &material, uint8_t flags) {
-  const auto m = glm::translate(glm::mat4{1.0f}, position);
-  m_renderables.push_back(Renderable{
-    .mesh = mesh,
-    .material = material,
-    .flags = flags,
-    .modelMatrix = m,
-    .aabb = mesh.aabb.transform(m),
-  });
-}
-
-void App::_createTower(const glm::ivec3 &dimensions, float spacing,
-                       const glm::vec3 &startPosition,
-                       std::span<const std::string> materialNames) {
+void App::_createTower(
+  const glm::ivec3 &dimensions, float spacing, const glm::vec3 &startPosition,
+  std::span<std::reference_wrapper<const Material>> materials) {
   std::random_device rd{};
   std::default_random_engine gen{rd()};
 
@@ -351,8 +369,10 @@ void App::_createTower(const glm::ivec3 &dimensions, float spacing,
         const glm::vec3 localPosition{(col - (dimensions.x / 2)) * spacing,
                                       row * spacing + spacing,
                                       (z - (dimensions.z / 2)) * spacing};
-        auto *material = m_materials[getRandomOf(gen, materialNames)].get();
-        _addRenderable(mesh, startPosition + localPosition, *material);
+        auto material = getRandomOf(gen, materials);
+        _addRenderable(
+          mesh, glm::translate(glm::mat4{1.0}, startPosition + localPosition),
+          material);
       }
 }
 
@@ -360,13 +380,14 @@ void App::_createSun() {
   m_lights.push_back(Light{
     .type = LightType::Directional,
     .visible = true,
-    .direction = glm::vec3{0.5f, -0.5f, 0.0f},
+    //.direction = glm::vec3{0.5f, -0.5f, 0.0f},
+    .direction = glm::normalize(glm::vec3{0.0f, -1.0f, 0.2f}),
     .color = glm::vec3{0.635f, 0.811f, 0.996f},
     .intensity = 6.0f,
   });
 }
 void App::_spawnPointLights(uint16_t width, uint16_t depth, float step) {
-  const std::uniform_real_distribution<float> dist{0.0f, 1.0f};
+  std::uniform_real_distribution<float> dist{0.0f, 1.0f};
   std::random_device rd{};
   std::default_random_engine gen{rd()};
 
@@ -387,7 +408,41 @@ void App::_spawnPointLights(uint16_t width, uint16_t depth, float step) {
   }
 }
 
-void App::_update(fsec dt) {}
+void App::_update(fsec dt) {
+  if (ImGui::Begin("Scene")) {
+    if (ImGui::CollapsingHeader("Camera")) {
+      const auto &position = m_camera.getPosition();
+      ImGui::Text("Position = [%.2f, %.2f, %.2f]", position.x, position.y,
+                  position.z);
+      const auto &forward = m_camera.getForward();
+      ImGui::Text("Direction = [%.2f, %.2f, %.2f]", forward.x, forward.y,
+                  forward.z);
+    }
+
+    if (auto *light = m_lights.empty() ? nullptr : &m_lights.front(); light) {
+      if (ImGui::CollapsingHeader("Sun")) {
+        if (glm::vec4 color{light->color, light->intensity};
+            ImGui::ColorEdit4("Color", glm::value_ptr(color))) {
+          light->color = glm::vec3{color};
+          light->intensity = color.a;
+        }
+
+        if (ImGui::Button("Pilot")) {
+          light->direction = m_camera.getForward();
+        }
+        ImGui::SameLine();
+        static bool animate{false};
+        if (ImGui::Button("Animate")) animate = !animate;
+
+        if (animate) {
+          auto &direction = light->direction;
+          direction = glm::rotateY(direction, glm::radians(15.0f) * dt.count());
+        }
+      }
+    }
+  }
+  ImGui::End();
+}
 void App::_processInput() {
   if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(m_window, true);
@@ -406,7 +461,7 @@ glm::vec2 App::_getMousePosition() const {
 
 void App::_onMouseButton(GLFWwindow *window, int button, int action, int mods) {
   auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
-  if (action == GLFW_PRESS and button >= 0 and
+  if (action == GLFW_PRESS && button >= 0 &&
       button < IM_ARRAYSIZE(m_mouseJustPressed))
     app->m_mouseJustPressed[button] = true;
 }
@@ -418,7 +473,7 @@ void App::_onMouseScroll(GLFWwindow *window, double xoffset, double yoffset) {
 void App::_onKey(GLFWwindow *window, int key, int scancode, int action,
                  int mods) {
   auto &io = ImGui::GetIO();
-  if (key >= 0 and key < IM_ARRAYSIZE(io.KeysDown)) {
+  if (key >= 0 && key < IM_ARRAYSIZE(io.KeysDown)) {
     if (action == GLFW_PRESS) {
       io.KeysDown[key] = true;
     }
@@ -429,15 +484,15 @@ void App::_onKey(GLFWwindow *window, int key, int scancode, int action,
 
   // Modifiers are not reliable across systems
   io.KeyCtrl =
-    io.KeysDown[GLFW_KEY_LEFT_CONTROL] or io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
+    io.KeysDown[GLFW_KEY_LEFT_CONTROL] || io.KeysDown[GLFW_KEY_RIGHT_CONTROL];
   io.KeyShift =
-    io.KeysDown[GLFW_KEY_LEFT_SHIFT] or io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
-  io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] or io.KeysDown[GLFW_KEY_RIGHT_ALT];
+    io.KeysDown[GLFW_KEY_LEFT_SHIFT] || io.KeysDown[GLFW_KEY_RIGHT_SHIFT];
+  io.KeyAlt = io.KeysDown[GLFW_KEY_LEFT_ALT] || io.KeysDown[GLFW_KEY_RIGHT_ALT];
 #ifdef _WIN32
   io.KeySuper = false;
 #else
   io.KeySuper =
-    io.KeysDown[GLFW_KEY_LEFT_SUPER] or io.KeysDown[GLFW_KEY_RIGHT_SUPER];
+    io.KeysDown[GLFW_KEY_LEFT_SUPER] || io.KeysDown[GLFW_KEY_RIGHT_SUPER];
 #endif
 }
 void App::_onFocus(GLFWwindow *window, int focused) {

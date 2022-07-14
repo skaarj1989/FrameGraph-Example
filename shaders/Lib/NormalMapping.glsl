@@ -20,21 +20,17 @@ vec2 evaluateHeight(sampler2D bumpMap, vec2 texCoord, float scale) {
 }
 
 vec3 perturbNormal(vec3 N, vec2 dB) {
-#if !DEPTH_PASS
-  const vec3 sigmaS = dFdx(fs_in.fragPosViewSpace.xyz);
-  const vec3 sigmaT = dFdy(fs_in.fragPosViewSpace.xyz);
+  const vec3 sigmaS = dFdx(fs_in.fragPos.xyz);
+  const vec3 sigmaT = dFdy(fs_in.fragPos.xyz);
   const vec3 R1 = cross(sigmaT, N);
   const vec3 R2 = cross(N, sigmaS);
   const float det = dot(sigmaS, R1);
   const vec3 surfaceGradient = sign(det) * (dB.s * R1 + dB.t * R2);
   return normalize(abs(det) * N - surfaceGradient);
-#else
-  return vec3(0.0);
-#endif
 }
 
-// Transform normal: tangent space -> view space
-vec3 tangentToView(vec3 N, vec2 texCoord) {
+// Transform normal: tangent-space -> world-space
+vec3 tangentToWorld(vec3 N, vec2 texCoord) {
 #if !DEPTH_PASS
 #  ifdef HAS_NORMAL
 #    ifdef HAS_TANGENTS
@@ -51,7 +47,7 @@ vec3 tangentToView(vec3 N, vec2 texCoord) {
 #endif
 }
 
-vec3 viewToTangent(vec3 viewDir, vec2 texCoord) {
+vec3 worldToTangent(vec3 viewDir, vec2 texCoord) {
 #if !DEPTH_PASS
 #  ifdef HAS_NORMAL
 #    ifdef HAS_TANGENTS
@@ -69,10 +65,11 @@ vec3 viewToTangent(vec3 viewDir, vec2 texCoord) {
 }
 
 vec2 parallaxOcclusionMapping(sampler2D heightMap, vec2 texCoord, float scale) {
+#if !DEPTH_PASS
   const float minLayers = 8.0;
   const float maxLayers = 32.0;
 
-  const vec3 viewDir = viewToTangent(getViewDir(), texCoord);
+  const vec3 viewDir = worldToTangent(getViewDir(), texCoord);
 
   const float numLayers =
     mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
@@ -98,6 +95,9 @@ vec2 parallaxOcclusionMapping(sampler2D heightMap, vec2 texCoord, float scale) {
 
   const float weight = afterDepth / (afterDepth - beforeDepth);
   return prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+#else
+  return texCoord;
+#endif
 }
 
 #endif

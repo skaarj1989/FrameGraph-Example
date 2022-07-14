@@ -5,6 +5,7 @@
 #include "../FrameGraphHelper.hpp"
 #include "../FrameGraphTexture.hpp"
 
+#include "../FrameData.hpp"
 #include "../GBufferData.hpp"
 
 #include "../ShaderCodeBuilder.hpp"
@@ -24,9 +25,13 @@ void GBufferPass::addGeometryPass(FrameGraph &fg,
                                   Extent2D resolution,
                                   const PerspectiveCamera &camera,
                                   std::span<const Renderable *> renderables) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   blackboard.add<GBufferData>() = fg.addCallbackPass<GBufferData>(
     "GBuffer Pass",
     [&](FrameGraph::Builder &builder, GBufferData &data) {
+      builder.read(frameBlock);
+
       data.depth = builder.create<FrameGraphTexture>(
         "SceneDepth", {.extent = resolution, .format = PixelFormat::Depth24});
       data.depth = builder.write(data.depth);
@@ -86,16 +91,20 @@ void GBufferPass::addGeometryPass(FrameGraph &fg,
       auto &rc = *static_cast<RenderContext *>(ctx);
       const auto framebuffer = rc.beginRendering(renderingInfo);
       for (const auto &renderable : renderables) {
-        auto &[mesh, material, flags, modelMatrix, _] = *renderable;
+        auto &[mesh, subMeshIndex, material, flags, modelMatrix, _] =
+          *renderable;
 
-        rc.setGraphicsPipeline(_getPipeline(*mesh.vertexFormat, &material));
+        rc.setGraphicsPipeline(_getPipeline(*mesh.vertexFormat, &material))
+          .bindUniformBuffer(0, getBuffer(resources, frameBlock));
+
         _setTransform(*camera, modelMatrix);
         for (uint32_t unit{kFirstFreeTextureBinding};
              const auto &[_, texture] : material.getDefaultTextures()) {
           rc.bindTexture(unit++, *texture);
         }
         rc.setUniform1i("u_MaterialFlags", flags)
-          .draw(mesh.vertexBuffer, mesh.indexBuffer, mesh.geometryInfo);
+          .draw(*mesh.vertexBuffer, *mesh.indexBuffer,
+                mesh.subMeshes[subMeshIndex].geometryInfo);
       }
       rc.endRendering(framebuffer);
     });

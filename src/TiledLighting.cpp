@@ -6,6 +6,7 @@
 #include "FrameGraphTexture.hpp"
 #include "FrameGraphBuffer.hpp"
 
+#include "FrameData.hpp"
 #include "GBufferData.hpp"
 #include "LightsData.hpp"
 #include "LightCullingData.hpp"
@@ -29,9 +30,8 @@ static_assert(sizeof(GPUFrustumTile) == 64);
 // TiledLighting class:
 //
 
-TiledLighting::TiledLighting(RenderContext &rc, uint32_t maxNumLights,
-                             uint32_t tileSize)
-    : m_renderContext{rc}, m_maxNumLights{maxNumLights}, m_tileSize{tileSize} {
+TiledLighting::TiledLighting(RenderContext &rc, uint32_t tileSize)
+    : m_renderContext{rc}, m_tileSize{tileSize} {
   _setupPipelines();
 }
 TiledLighting::~TiledLighting() {
@@ -49,7 +49,7 @@ void TiledLighting::cullLights(FrameGraph &fg,
   const auto numFrustums = static_cast<uint32_t>(numGroups.x * numGroups.y);
 
   const auto gridFrustums =
-    _buildFrustums(fg, numFrustums, glm::ceil(numGroups / f));
+    _buildFrustums(fg, blackboard, numFrustums, glm::ceil(numGroups / f));
   _cullLights(fg, blackboard, gridFrustums, numFrustums, numGroups);
 }
 
@@ -62,21 +62,24 @@ void TiledLighting::_setupPipelines() {
 
   m_cullLightsProgram = m_renderContext.createComputeProgram(
     shaderCodeBuilder
-      .addDefine("MAX_NUM_LIGHTS", m_maxNumLights)
       // 0 = Disabled, 1 = Heatmap, 2 = Depth
       .addDefine("_DEBUG_OUTPUT", kUseDebugOutput ? 1 : 0)
       .build("LightCulling/CullLights.comp"));
 }
 
-FrameGraphResource TiledLighting::_buildFrustums(FrameGraph &fg,
-                                                 uint32_t numFrustums,
-                                                 glm::uvec2 numGroups) {
+FrameGraphResource
+TiledLighting::_buildFrustums(FrameGraph &fg, FrameGraphBlackboard &blackboard,
+                              uint32_t numFrustums, glm::uvec2 numGroups) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   struct FrustumsData {
     FrameGraphResource gridFrustums;
   };
   auto &pass = fg.addCallbackPass<FrustumsData>(
     "BuildFrustums",
     [&](FrameGraph::Builder &builder, FrustumsData &data) {
+      builder.read(frameBlock);
+
       const auto bufferSize =
         static_cast<GLsizeiptr>(sizeof(GPUFrustumTile) * numFrustums);
       data.gridFrustums =
@@ -89,7 +92,8 @@ FrameGraphResource TiledLighting::_buildFrustums(FrameGraph &fg,
       TracyGpuZone("BuildFrustums");
 
       static_cast<RenderContext *>(ctx)
-        ->bindStorageBuffer(0, getBuffer(resources, data.gridFrustums))
+        ->bindUniformBuffer(0, getBuffer(resources, frameBlock))
+        .bindStorageBuffer(0, getBuffer(resources, data.gridFrustums))
         .dispatch(m_buildFrustumsProgram, {numGroups, 1u});
     });
 
@@ -100,6 +104,8 @@ void TiledLighting::_cullLights(FrameGraph &fg,
                                 FrameGraphBlackboard &blackboard,
                                 FrameGraphResource gridFrustums,
                                 uint32_t numFrustums, glm::uvec2 numThreads) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   const auto &gBuffer = blackboard.get<GBufferData>();
   const auto lightBuffer = blackboard.get<LightsData>().buffer;
 
@@ -112,6 +118,8 @@ void TiledLighting::_cullLights(FrameGraph &fg,
   auto &pass = fg.addCallbackPass<Data>(
     "CullLights",
     [&](FrameGraph::Builder &builder, Data &data) {
+      builder.read(frameBlock);
+
       builder.read(gridFrustums);
       builder.read(gBuffer.depth);
       builder.read(lightBuffer);
@@ -150,15 +158,16 @@ void TiledLighting::_cullLights(FrameGraph &fg,
       auto &lightsCounterSSBO = getBuffer(resources, data.lightsCounter);
 
       auto &rc = *static_cast<RenderContext *>(ctx);
-      rc.bindTexture(0, getTexture(resources, gBuffer.depth))
+      rc.bindUniformBuffer(0, getBuffer(resources, frameBlock))
 
         .bindStorageBuffer(0, getBuffer(resources, lightBuffer))
         .bindStorageBuffer(1, getBuffer(resources, gridFrustums))
 
-        .clear(lightsCounterSSBO)
+        //.clear(lightsCounterSSBO)
         .bindStorageBuffer(2, lightsCounterSSBO)
         .bindStorageBuffer(3, getBuffer(resources, data.lightIndices))
 
+        .bindTexture(0, getTexture(resources, gBuffer.depth))
         .bindImage(0, getTexture(resources, data.lightGrid), 0, GL_WRITE_ONLY);
 
       if constexpr (kUseDebugOutput) {

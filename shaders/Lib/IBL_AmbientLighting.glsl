@@ -14,8 +14,7 @@ LightContribution IBL_AmbientLighting(vec3 diffuseColor, vec3 F0,
 
   // -- Diffuse IBL:
 
-  const vec3 irradiance =
-    texture(t_IrradianceMap, vec3(viewToWorld(vec4(N, 0.0)))).rgb;
+  const vec3 irradiance = textureLod(t_IrradianceMap, N, 0.0).rgb;
 
   vec3 FssEss = specularWeight * k_S * f_ab.x + f_ab.y;
 
@@ -29,7 +28,7 @@ LightContribution IBL_AmbientLighting(vec3 diffuseColor, vec3 F0,
 
   // -- Specular IBL:
 
-  const vec3 R = vec3(viewToWorld(vec4(reflect(-V, N), 0.0)));
+  const vec3 R = reflect(-V, N);
 
   const float maxReflectionLOD = calculateMipLevels(t_PrefilteredEnvMap);
   const vec3 prefilteredColor =

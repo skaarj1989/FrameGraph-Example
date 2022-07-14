@@ -5,6 +5,7 @@
 #include "../FrameGraphHelper.hpp"
 #include "../FrameGraphTexture.hpp"
 
+#include "../FrameData.hpp"
 #include "../GBufferData.hpp"
 #include "../SSAOData.hpp"
 
@@ -24,12 +25,15 @@ SSAO::~SSAO() {
 }
 
 void SSAO::addPass(FrameGraph &fg, FrameGraphBlackboard &blackboard) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   const auto &gBuffer = blackboard.get<GBufferData>();
   const auto extent = fg.getDescriptor<FrameGraphTexture>(gBuffer.depth).extent;
 
   blackboard.add<SSAOData>() = fg.addCallbackPass<SSAOData>(
     "SSAO",
     [&](FrameGraph::Builder &builder, SSAOData &data) {
+      builder.read(frameBlock);
       builder.read(gBuffer.depth);
       builder.read(gBuffer.normal);
 
@@ -51,6 +55,7 @@ void SSAO::addPass(FrameGraph &fg, FrameGraphBlackboard &blackboard) {
       auto &rc = *static_cast<RenderContext *>(ctx);
       const auto framebuffer = rc.beginRendering(renderingInfo);
       rc.setGraphicsPipeline(m_pipeline)
+        .bindUniformBuffer(0, getBuffer(resources, frameBlock))
 
         .bindTexture(0, getTexture(resources, gBuffer.depth))
         .bindTexture(1, getTexture(resources, gBuffer.normal))

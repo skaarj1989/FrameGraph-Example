@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fg/FrameGraphResource.hpp"
+#include "fg/Fwd.hpp"
 #include "../RenderContext.hpp"
 
 class FrameGraph;

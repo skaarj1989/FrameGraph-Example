@@ -2,16 +2,18 @@ cmake_minimum_required(VERSION 3.20)
 
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE
-      "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-      CACHE STRING "")
+    "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+    CACHE STRING "")
 endif()
+
 message(STATUS "TOOLCHAIN: ${CMAKE_TOOLCHAIN_FILE}")
 
 project(FrameGraphExample)
+
 if(PROJECT_BINARY_DIR STREQUAL PROJECT_SOURCE_DIR)
   message(
     FATAL_ERROR
-      "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
+    "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
   )
 endif()
 
@@ -53,5 +55,9 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glad)
 FetchContent_MakeAvailable(FrameGraph)
 FetchContent_MakeAvailable(Tracy)
+
+include(cmake/AddResources.cmake)
+add_resources(TARGET Shaders IN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders OUT_DIR shaders)
+add_resources(TARGET Assets IN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets OUT_DIR assets)
 
 add_subdirectory(src)

@@ -7,8 +7,8 @@
 #if !defined(DEPTH_PASS) && defined(HAS_NORMAL) && !defined(HAS_TANGENTS)
 
 mat3 cotangentFrame(vec3 N, vec2 texCoord) {
-  const vec3 dp1 = dFdx(fs_in.fragPosViewSpace.xyz);
-  const vec3 dp2 = dFdy(fs_in.fragPosViewSpace.xyz);
+  const vec3 dp1 = dFdx(fs_in.fragPos.xyz);
+  const vec3 dp2 = dFdy(fs_in.fragPos.xyz);
   const vec2 duv1 = dFdx(texCoord);
   const vec2 duv2 = dFdy(texCoord);
 

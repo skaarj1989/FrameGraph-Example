@@ -5,6 +5,9 @@
 #include "CubemapConverter.hpp"
 #include "ImGuiRenderer.hpp"
 
+#include "MeshCache.hpp"
+#include "MaterialCache.hpp"
+
 #include <map>
 #include <chrono>
 
@@ -35,15 +38,15 @@ private:
   void _setupUi();
 
   void _setupScene();
-  void _loadMaterial(const std::string_view name);
 
-  void _addRenderable(const Mesh &, const glm::vec3 &position,
-                      const Material &material,
-                      uint8_t flags = MaterialFlag_Default);
+  void _addRenderable(
+    const Mesh &, const glm::mat4 &,
+    std::optional<std::reference_wrapper<const Material>> materialOverride,
+    uint8_t flags = MaterialFlag_Default);
 
   void _createTower(const glm::ivec3 &dimensions, float spacing,
                     const glm::vec3 &,
-                    std::span<const std::string> materialNames);
+                    std::span<std::reference_wrapper<const Material>>);
 
   void _createSun();
   void _spawnPointLights(uint16_t width, uint16_t depth, float step);
@@ -74,8 +77,11 @@ private:
   std::unique_ptr<CubemapConverter> m_cubemapConverter;
   std::unique_ptr<ImGuiRenderer> m_uiRenderer;
 
+  std::unique_ptr<TextureCache> m_textureCache;
+  std::unique_ptr<MaterialCache> m_materialCache;
+  std::unique_ptr<MeshCache> m_meshCache;
+
   Texture m_skybox;
-  std::unordered_map<std::string, std::shared_ptr<Material>> m_materials;
 
   PerspectiveCamera m_camera;
   std::vector<Light> m_lights;

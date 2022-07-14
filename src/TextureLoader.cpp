@@ -45,7 +45,7 @@ std::shared_ptr<Texture> loadTexture(const std::filesystem::path &p,
   }
 
   uint32_t numMipLevels{1u};
-  if (isPowerOf2(width) and isPowerOf2(height))
+  if (isPowerOf2(width) && isPowerOf2(height))
     numMipLevels = calcMipLevels(glm::max(width, height));
 
   auto texture = rc.createTexture2D(
@@ -56,9 +56,11 @@ std::shared_ptr<Texture> loadTexture(const std::filesystem::path &p,
                              .minFilter = TexelFilter::Linear,
                              .mipmapMode = MipmapMode::Linear,
                              .magFilter = TexelFilter::Linear,
+                             .maxAnisotropy = 16.0f,
                            });
   stbi_image_free(pixels);
 
   if (numMipLevels > 1) rc.generateMipmaps(texture);
-  return std::make_shared<Texture>(std::move(texture));
+  return std::shared_ptr<Texture>(new Texture{std::move(texture)},
+                                  RenderContext::ResourceDeleter{rc});
 }

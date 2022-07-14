@@ -3,11 +3,9 @@
 
 #include <Resources/Cascades.glsl>
 
-float _getDirLightVisibility(vec3 fragPosViewSpace, float NdotL) {
-  const uint cascadeIndex = _selectCascadeIndex(fragPosViewSpace);
-  const vec4 fragPosWorldSpace = viewToWorld(vec4(fragPosViewSpace, 1.0));
+float _getDirLightVisibility(uint cascadeIndex, vec3 fragPos, float NdotL) {
   vec4 shadowCoord =
-    u_Cascades.viewProjMatrices[cascadeIndex] * fragPosWorldSpace;
+    u_Cascades.viewProjMatrices[cascadeIndex] * vec4(fragPos, 1.0);
 
   const float bias = 0.0;
 

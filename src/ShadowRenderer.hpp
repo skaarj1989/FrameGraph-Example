@@ -1,12 +1,9 @@
 #pragma once
 
-#include "fg/FrameGraphResource.hpp"
+#include "fg/Fwd.hpp"
 #include "Passes/BaseGeometryPass.hpp"
 #include "Light.hpp"
 #include <span>
-
-class FrameGraph;
-class FrameGraphBlackboard;
 
 class ShadowRenderer final : public BaseGeometryPass {
 public:
@@ -28,9 +25,10 @@ private:
                                            const Material *) final;
 
   [[nodiscard]] FrameGraphResource
-  _addCascadedPass(FrameGraph &, FrameGraphResource cascadedShadowMaps,
-                   const glm::mat4 &lightViewProj,
-                   std::vector<const Renderable *> &&, uint32_t cascadeIdx);
+  _addCascadePass(FrameGraph &,
+                  std::optional<FrameGraphResource> cascadedShadowMaps,
+                  const glm::mat4 &lightViewProj,
+                  std::vector<const Renderable *> &&, uint32_t cascadeIdx);
 
 private:
   Buffer m_shadowMatrices;

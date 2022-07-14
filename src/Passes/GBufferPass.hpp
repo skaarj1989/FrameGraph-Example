@@ -1,10 +1,8 @@
 #pragma once
 
+#include "fg/Fwd.hpp"
 #include "BaseGeometryPass.hpp"
 #include <span>
-
-class FrameGraph;
-class FrameGraphBlackboard;
 
 class GBufferPass final : public BaseGeometryPass {
 public:

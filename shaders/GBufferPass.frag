@@ -2,6 +2,8 @@
 
 // Use with Geometry.vert
 
+#include <Resources/FrameBlock.glsl>
+
 #include "BasePassAttributes.glsl"
 
 #include <Lib/Math.glsl>

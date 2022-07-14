@@ -10,6 +10,8 @@ public:
 
 protected:
   void _setTransform(const PerspectiveCamera &, const glm::mat4 &modelMatrix);
+  void _setTransform(const glm::mat4 &viewProjection,
+                     const glm::mat4 &modelMatrix);
 
   [[nodiscard]] GraphicsPipeline &_getPipeline(const VertexFormat &,
                                                const Material *);

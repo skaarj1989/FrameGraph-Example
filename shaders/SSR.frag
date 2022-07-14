@@ -60,7 +60,8 @@ void main() {
   }
 
   const vec3 fragPosViewSpace = viewPositionFromDepth(depth, v_TexCoord);
-  const vec3 N = normalize(texture(t_GBuffer0, v_TexCoord).xyz);
+  vec3 N = normalize(texture(t_GBuffer0, v_TexCoord).xyz);
+  N = mat3(u_Frame.camera.view) * N;
   const vec3 V = normalize(-fragPosViewSpace);
   const float NdotV = clamp01(dot(N, V));
 
@@ -70,10 +71,7 @@ void main() {
   const vec3 R = normalize(reflect(-V, N));
   RayCastResult rayResult =
     rayCast(fragPosViewSpace, normalize(R + jitter), 10, 200.0, 0.1);
-  if (!rayResult.hit) {
-    discard;
-    return;
-  }
+  if (!rayResult.hit) discard;
 
   const vec3 reflectedColor = texture(t_SceneColor, rayResult.uv).rgb;
 

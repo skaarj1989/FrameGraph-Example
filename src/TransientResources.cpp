@@ -52,7 +52,7 @@ void heartbeat(auto &objects, auto &pools, float dt, auto &&deleter) {
     }
   }
   objects.erase(std::remove_if(objects.begin(), objects.end(),
-                               [](auto &object) { return not(*object); }),
+                               [](auto &object) { return !(*object); }),
                 objects.end());
 }
 

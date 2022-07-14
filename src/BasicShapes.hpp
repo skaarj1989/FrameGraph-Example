@@ -14,8 +14,10 @@ public:
 private:
   RenderContext &m_renderContext;
 
-  VertexBuffer m_vertexBuffer;
-  IndexBuffer m_indexBuffer;
+  std::shared_ptr<VertexBuffer> m_vertexBuffer;
+  std::shared_ptr<IndexBuffer> m_indexBuffer;
 
-  std::unique_ptr<Mesh> m_plane, m_cube, m_sphere;
+  Mesh m_plane;
+  Mesh m_cube;
+  Mesh m_sphere;
 };

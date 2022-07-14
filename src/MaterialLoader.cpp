@@ -22,7 +22,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(CullMode, {
                                        });
 
 std::shared_ptr<Material> loadMaterial(const std::filesystem::path &p,
-                                       RenderContext &rc) {
+                                       TextureCache &textureCache) {
   const auto j = nlohmann::json::parse(readText(p));
 
   auto builder = Material::Builder{};
@@ -33,7 +33,7 @@ std::shared_ptr<Material> loadMaterial(const std::filesystem::path &p,
   if (j.contains("samplers")) {
     for (const auto &[_, prop] : j["samplers"].items()) {
       const auto texturePath = adjustPath(prop["path"].get<std::string>(), p);
-      auto textureResource = loadTexture(texturePath, rc);
+      auto textureResource = textureCache.load(texturePath);
       builder.addSampler(prop["name"], textureResource);
     }
   }

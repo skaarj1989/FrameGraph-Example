@@ -13,6 +13,7 @@ const uint Tonemap_Uncharted = 4;
 layout(location = 0) uniform uint u_Tonemap = Tonemap_Clamp;
 
 #include <Lib/Math.glsl>
+#include <Lib/Color.glsl>
 #include <Tonemapping/ACES.glsl>
 #include <Tonemapping/Filmic.glsl>
 #include <Tonemapping/Reinhard.glsl>
@@ -20,7 +21,7 @@ layout(location = 0) uniform uint u_Tonemap = Tonemap_Clamp;
 
 layout(location = 0) out vec3 FragColor;
 void main() {
-  vec3 color = texture(t_0, v_TexCoord).rgb;
+  const vec3 color = texture(t_0, v_TexCoord).rgb;
 
   switch (u_Tonemap) {
   case Tonemap_ACES:
@@ -35,9 +36,12 @@ void main() {
   case Tonemap_Uncharted:
     FragColor = tonemapUncharted2(color);
     break;
+
   case Tonemap_Clamp:
   default:
-    FragColor = clamp01(color);
+    FragColor = color;
     break;
   }
+
+  FragColor = linearTosRGB(FragColor);
 }

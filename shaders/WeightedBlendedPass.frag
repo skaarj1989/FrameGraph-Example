@@ -2,9 +2,9 @@
 
 // Use with Geometry.vert
 
-#include "BasePassAttributes.glsl"
-
 #include <Resources/FrameBlock.glsl>
+
+#include "BasePassAttributes.glsl"
 
 layout(binding = 0) uniform sampler2D t_SceneDepth;
 
@@ -55,8 +55,11 @@ void main() {
 #if SHADING_MODEL == SHADING_MODEL_UNLIT
   const vec3 color = material.emissiveColor;
 #else
+  const vec3 fragPosViewSpace =
+    (u_Frame.camera.view * vec4(fs_in.fragPos.xyz, 1.0)).xyz;
+
   const vec3 N = normalize(material.normal);
-  const vec3 V = normalize(-fs_in.fragPosViewSpace.xyz);
+  const vec3 V = normalize(getCameraPosition() - fs_in.fragPos.xyz);
   const float NdotV = clamp01(dot(N, V));
 
   const bool receiveShadow = (u_MaterialFlags & MaterialFlag_ReceiveShadow) ==
@@ -108,7 +111,7 @@ void main() {
     const Light light = g_LightBuffer.data[lightIndex];
 
     const vec3 fragToLight = light.type != LightType_Directional
-                               ? light.position.xyz - fs_in.fragPosViewSpace.xyz
+                               ? light.position.xyz - fs_in.fragPos.xyz
                                : -light.direction.xyz;
 
     const vec3 L = normalize(fragToLight);
@@ -119,8 +122,9 @@ void main() {
       float visibility = 1.0;
       if (hasRenderFeatures(RenderFeature_Shadows) && receiveShadow) {
         if (light.type == LightType_Directional) {
+          const uint cascadeIndex = _selectCascadeIndex(fragPosViewSpace);
           visibility =
-            _getDirLightVisibility(fs_in.fragPosViewSpace.xyz, NdotL);
+            _getDirLightVisibility(cascadeIndex, fs_in.fragPos.xyz, NdotL);
         }
 
         if (visibility == 0.0) continue;

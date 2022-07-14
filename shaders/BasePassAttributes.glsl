@@ -2,12 +2,10 @@
 #define _BASE_PASS_ATTRIBUTES_GLSL_
 
 layout(location = 0) in VertexData {
-#if !DEPTH_PASS
-  vec4 fragPosViewSpace;
-#endif
+  vec4 fragPos;
 #ifdef HAS_NORMAL
 #  ifdef HAS_TANGENTS
-  mat3 TBN; // tangent-space -> to view-space
+  mat3 TBN; // tangent-space -> to world-space
 #  else
   vec3 normal;
 #  endif
@@ -27,8 +25,8 @@ fs_in;
 // -- FUNCTIONS:
 
 vec3 getViewDir() {
-#if !DEPTH_PASS
-  return normalize(-fs_in.fragPosViewSpace.xyz);
+#ifdef _FRAME_BLOCK_GLSL_
+  return normalize(getCameraPosition() - fs_in.fragPos.xyz);
 #else
   return vec3(0.0);
 #endif

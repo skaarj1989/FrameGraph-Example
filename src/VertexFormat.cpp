@@ -3,9 +3,7 @@
 #include <cassert>
 #include <algorithm>
 
-namespace {
-
-[[nodiscard]] int32_t getSize(VertexAttribute::Type type) {
+int32_t getSize(VertexAttribute::Type type) {
   switch (type) {
     using enum VertexAttribute::Type;
   case Float:
@@ -26,8 +24,6 @@ namespace {
   assert(false);
   return 0;
 }
-
-} // namespace
 
 //
 // VertexFormat class:

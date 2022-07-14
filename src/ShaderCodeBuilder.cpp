@@ -9,7 +9,7 @@
 
 namespace {
 
-static const std::filesystem::path kShadersPath{"../../shaders"};
+static const std::filesystem::path kShadersPath{"../shaders"};
 
 // https://stackoverflow.com/questions/26492513/write-c-regular-expression-to-match-a-include-preprocessing-directive
 // https://stackoverflow.com/questions/42139302/using-regex-to-filter-for-preprocessor-directives
@@ -28,7 +28,7 @@ static const std::filesystem::path kShadersPath{"../../shaders"};
 
 [[nodiscard]] std::tuple<std::string, bool> statInclude(const std::smatch &m) {
   const auto isBetween = [&](auto &&a, auto &&b) {
-    return m[1].compare(a) == 0 and m[3].compare(b) == 0;
+    return m[1].compare(a) == 0 && m[3].compare(b) == 0;
   };
 
   if (isBetween("\"", "\""))
@@ -66,7 +66,7 @@ void resolveInclusions(std::string &src,
     }
 
     auto codeChunk = readText(next);
-    if (not codeChunk.empty()) {
+    if (!codeChunk.empty()) {
       resolveInclusions(codeChunk, alreadyIncluded, level + 1,
                         next.parent_path());
     } else {
@@ -119,7 +119,7 @@ std::string ShaderCodeBuilder::build(const std::filesystem::path &p) {
   auto versionDirectivePos = sourceCode.find("#version");
   assert(versionDirectivePos != std::string::npos);
 
-  if (not m_defines.empty()) {
+  if (!m_defines.empty()) {
     std::ostringstream oss;
     std::transform(m_defines.cbegin(), m_defines.cend(),
                    std::ostream_iterator<std::string>{oss, "\n"},

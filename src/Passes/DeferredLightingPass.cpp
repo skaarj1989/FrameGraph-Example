@@ -6,6 +6,7 @@
 #include "../FrameGraphTexture.hpp"
 #include "../FrameGraphBuffer.hpp"
 
+#include "../FrameData.hpp"
 #include "../BRDF.hpp"
 #include "../GlobalLightProbeData.hpp"
 #include "../LightsData.hpp"
@@ -18,17 +19,14 @@
 
 #include "TracyOpenGL.hpp"
 
-DeferredLightingPass::DeferredLightingPass(RenderContext &rc,
-                                           uint32_t maxNumLights,
-                                           uint32_t tileSize)
+DeferredLightingPass::DeferredLightingPass(RenderContext &rc, uint32_t tileSize)
     : m_renderContext{rc} {
   ShaderCodeBuilder shaderCodeBuilder;
-  const auto program = rc.createGraphicsProgram(
-    shaderCodeBuilder.build("FullScreenTriangle.vert"),
-    shaderCodeBuilder.addDefine("MAX_NUM_LIGHTS", maxNumLights)
-      .addDefine("TILED_LIGHTING", 1)
-      .addDefine("TILE_SIZE", tileSize)
-      .build("DeferredLighting.frag"));
+  const auto program =
+    rc.createGraphicsProgram(shaderCodeBuilder.build("FullScreenTriangle.vert"),
+                             shaderCodeBuilder.addDefine("TILED_LIGHTING", 1)
+                               .addDefine("TILE_SIZE", tileSize)
+                               .build("DeferredLighting.frag"));
 
   m_pipeline = GraphicsPipeline::Builder{}
                  .setDepthStencil({
@@ -50,6 +48,8 @@ DeferredLightingPass::~DeferredLightingPass() {
 FrameGraphResource
 DeferredLightingPass::addPass(FrameGraph &fg,
                               FrameGraphBlackboard &blackboard) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   const auto &gBuffer = blackboard.get<GBufferData>();
   const auto extent = fg.getDescriptor<FrameGraphTexture>(gBuffer.depth).extent;
 
@@ -69,6 +69,8 @@ DeferredLightingPass::addPass(FrameGraph &fg,
   auto &deferredLighting = fg.addCallbackPass<Data>(
     "DeferredLighting Pass",
     [&](FrameGraph::Builder &builder, Data &data) {
+      builder.read(frameBlock);
+
       builder.read(gBuffer.depth);
       builder.read(gBuffer.normal);
       builder.read(gBuffer.albedo);
@@ -106,6 +108,7 @@ DeferredLightingPass::addPass(FrameGraph &fg,
       auto &rc = *static_cast<RenderContext *>(ctx);
       const auto framebuffer = rc.beginRendering(renderingInfo);
       rc.setGraphicsPipeline(m_pipeline)
+        .bindUniformBuffer(0, getBuffer(resources, frameBlock))
 
         .bindTexture(0, getTexture(resources, gBuffer.depth))
         .bindTexture(1, getTexture(resources, gBuffer.normal))

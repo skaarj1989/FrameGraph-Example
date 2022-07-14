@@ -4,7 +4,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 [[nodiscard]] inline constexpr bool isPowerOf2(uint32_t v) {
-  return v and !(v & (v - 1));
+  return v && !(v & (v - 1));
 }
 [[nodiscard]] inline constexpr uint64_t nextPowerOf2(uint64_t v) {
   v--;

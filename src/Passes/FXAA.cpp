@@ -1,9 +1,11 @@
 #include "FXAA.hpp"
 
 #include "fg/FrameGraph.hpp"
+#include "fg/Blackboard.hpp"
 #include "../FrameGraphHelper.hpp"
 #include "../FrameGraphTexture.hpp"
 
+#include "../FrameData.hpp"
 #include "../ShaderCodeBuilder.hpp"
 
 #include "TracyOpenGL.hpp"
@@ -29,7 +31,11 @@ FXAA::FXAA(RenderContext &rc) : m_renderContext{rc} {
 }
 FXAA::~FXAA() { m_renderContext.destroy(m_pipeline); }
 
-FrameGraphResource FXAA::addPass(FrameGraph &fg, FrameGraphResource input) {
+FrameGraphResource FXAA::addPass(FrameGraph &fg,
+                                 FrameGraphBlackboard &blackboard,
+                                 FrameGraphResource input) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   const auto extent = fg.getDescriptor<FrameGraphTexture>(input).extent;
 
   struct Data {
@@ -38,6 +44,7 @@ FrameGraphResource FXAA::addPass(FrameGraph &fg, FrameGraphResource input) {
   auto &pass = fg.addCallbackPass<Data>(
     "FXAA",
     [&](FrameGraph::Builder &builder, Data &data) {
+      builder.read(frameBlock);
       builder.read(input);
 
       data.output = builder.create<FrameGraphTexture>(
@@ -57,6 +64,7 @@ FrameGraphResource FXAA::addPass(FrameGraph &fg, FrameGraphResource input) {
       auto &rc = *static_cast<RenderContext *>(ctx);
       const auto framebuffer = rc.beginRendering(renderingInfo);
       rc.setGraphicsPipeline(m_pipeline)
+        .bindUniformBuffer(0, getBuffer(resources, frameBlock))
         .bindTexture(0, getTexture(resources, input))
         .drawFullScreenTriangle()
         .endRendering(framebuffer);

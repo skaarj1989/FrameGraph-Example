@@ -74,7 +74,7 @@ template <uint8_t _NumSectors = 36, uint8_t _NumStacks = 18>
 [[nodiscard]] auto buildSphere(float radius) {
   // http://www.songho.ca/opengl/gl_sphere.html
 
-  static_assert(_NumSectors >= 3 and _NumStacks >= 2);
+  static_assert(_NumSectors >= 3 && _NumStacks >= 2);
   constexpr auto kPI = glm::pi<float>();
 
   std::vector<Vertex1p1n1st> vertices;
@@ -141,21 +141,31 @@ template <uint8_t _NumSectors = 36, uint8_t _NumStacks = 18>
 
 BasicShapes::BasicShapes(RenderContext &rc) : m_renderContext{rc} {
   auto [sphereVertices, sphereIndices] = buildSphere<>(1.0f);
-  m_vertexBuffer = rc.createVertexBuffer(sizeof(Vertex1p1n1st),
-                                         kNumPlaneVertices + kNumCubeVertices +
-                                           sphereVertices.size());
-  m_indexBuffer = rc.createIndexBuffer(IndexType::UInt16, sphereIndices.size(),
-                                       sphereIndices.data());
+
+  {
+    auto vertexBuffer = rc.createVertexBuffer(
+      sizeof(Vertex1p1n1st),
+      kNumPlaneVertices + kNumCubeVertices + sphereVertices.size());
+    m_vertexBuffer =
+      std::shared_ptr<VertexBuffer>(new VertexBuffer{std::move(vertexBuffer)},
+                                    RenderContext::ResourceDeleter{rc});
+
+    auto indexBuffer = rc.createIndexBuffer(
+      IndexType::UInt16, sphereIndices.size(), sphereIndices.data());
+    m_indexBuffer =
+      std::shared_ptr<IndexBuffer>(new IndexBuffer{std::move(indexBuffer)},
+                                   RenderContext::ResourceDeleter{rc});
+  }
 
   auto vertices =
-    static_cast<Vertex1p1n1st *>(m_renderContext.map(m_vertexBuffer));
+    static_cast<Vertex1p1n1st *>(m_renderContext.map(*m_vertexBuffer));
   memcpy(vertices, kPlaneVertices, kNumPlaneVertices * sizeof(Vertex1p1n1st));
   vertices += kNumPlaneVertices;
   memcpy(vertices, kCubeVertices, kNumCubeVertices * sizeof(Vertex1p1n1st));
   vertices += kNumCubeVertices;
   memcpy(vertices, sphereVertices.data(),
          sphereVertices.size() * sizeof(Vertex1p1n1st));
-  m_renderContext.unmap(m_vertexBuffer);
+  m_renderContext.unmap(*m_vertexBuffer);
 
   auto vertexFormat =
     VertexFormat::Builder{}
@@ -176,58 +186,71 @@ BasicShapes::BasicShapes(RenderContext &rc) : m_renderContext{rc} {
                     })
       .build();
 
-  m_plane = std::make_unique<Mesh>(Mesh{
+  m_plane = {
     .vertexFormat = vertexFormat,
     .vertexBuffer = m_vertexBuffer,
-    .geometryInfo =
+    .subMeshes =
       {
-        .topology = PrimitiveTopology::TriangleList,
-        .vertexOffset = 0,
-        .numVertices = kNumPlaneVertices,
+        {
+          .geometryInfo =
+            {
+              .topology = PrimitiveTopology::TriangleList,
+              .vertexOffset = 0,
+              .numVertices = kNumPlaneVertices,
+            },
+        },
       },
     .aabb =
       {
         .min = {-kPlaneSize, 0.0f, -kPlaneSize},
         .max = {kPlaneSize, 0.0f, kPlaneSize},
       },
-  });
-  m_cube = std::make_unique<Mesh>(Mesh{
+  };
+  m_cube = {
     .vertexFormat = vertexFormat,
     .vertexBuffer = m_vertexBuffer,
-    .geometryInfo =
+    .subMeshes =
       {
-        .topology = PrimitiveTopology::TriangleList,
-        .vertexOffset = kNumPlaneVertices,
-        .numVertices = kNumCubeVertices,
+        {
+          .geometryInfo =
+            {
+              .topology = PrimitiveTopology::TriangleList,
+              .vertexOffset = kNumPlaneVertices,
+              .numVertices = kNumCubeVertices,
+            },
+        },
       },
     .aabb =
       {
         .min = glm::vec3{-1.0f},
         .max = glm::vec3{1.0f},
       },
-  });
-  m_sphere = std::make_unique<Mesh>(Mesh{
+  };
+  m_sphere = {
     .vertexFormat = vertexFormat,
     .vertexBuffer = m_vertexBuffer,
     .indexBuffer = m_indexBuffer,
-    .geometryInfo =
+    .subMeshes =
       {
-        .topology = PrimitiveTopology::TriangleList,
-        .vertexOffset = kNumPlaneVertices + kNumCubeVertices,
-        .numVertices = static_cast<uint32_t>(sphereVertices.size()),
-        .numIndices = static_cast<uint32_t>(sphereIndices.size()),
+        {
+          .geometryInfo =
+            {
+              .topology = PrimitiveTopology::TriangleList,
+              .vertexOffset = kNumPlaneVertices + kNumCubeVertices,
+              .numVertices = static_cast<uint32_t>(sphereVertices.size()),
+              .numIndices = static_cast<uint32_t>(sphereIndices.size()),
+            },
+        },
       },
     .aabb =
       {
         .min = glm::vec3{-1.0f},
         .max = glm::vec3{1.0f},
       },
-  });
+  };
 }
-BasicShapes::~BasicShapes() {
-  m_renderContext.destroy(m_vertexBuffer).destroy(m_indexBuffer);
-}
+BasicShapes::~BasicShapes() = default;
 
-const Mesh &BasicShapes::getPlane() const { return *m_plane; }
-const Mesh &BasicShapes::getCube() const { return *m_cube; }
-const Mesh &BasicShapes::getSphere() const { return *m_sphere; }
+const Mesh &BasicShapes::getPlane() const { return m_plane; }
+const Mesh &BasicShapes::getCube() const { return m_cube; }
+const Mesh &BasicShapes::getSphere() const { return m_sphere; }

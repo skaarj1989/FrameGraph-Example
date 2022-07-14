@@ -4,7 +4,7 @@
 PerspectiveCamera &PerspectiveCamera::setPerspective(float fov,
                                                      float aspectRatio,
                                                      float zNear, float zFar) {
-  if (not glm::isnan(aspectRatio)) {
+  if (!glm::isnan(aspectRatio)) {
     m_projectionMatrix =
       glm::perspective(glm::radians(fov), aspectRatio, zNear, zFar);
 

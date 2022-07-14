@@ -6,6 +6,7 @@
 #include "../FrameGraphTexture.hpp"
 #include "../FrameGraphBuffer.hpp"
 
+#include "../FrameData.hpp"
 #include "../BRDF.hpp"
 #include "../GlobalLightProbeData.hpp"
 #include "../LightsData.hpp"
@@ -24,16 +25,15 @@ constexpr auto kFirstFreeTextureBinding = 5;
 
 }
 
-WeightedBlendedPass::WeightedBlendedPass(RenderContext &rc,
-                                         uint32_t maxNumLights,
-                                         uint32_t tileSize)
-    : BaseGeometryPass{rc}, m_maxNumLights{maxNumLights}, m_tileSize{tileSize} {
-}
+WeightedBlendedPass::WeightedBlendedPass(RenderContext &rc, uint32_t tileSize)
+    : BaseGeometryPass{rc}, m_tileSize{tileSize} {}
 
 void WeightedBlendedPass::addPass(FrameGraph &fg,
                                   FrameGraphBlackboard &blackboard,
                                   const PerspectiveCamera &camera,
                                   std::span<const Renderable *> renderables) {
+  const auto [frameBlock] = blackboard.get<FrameData>();
+
   const auto &gBuffer = blackboard.get<GBufferData>();
   const auto extent = fg.getDescriptor<FrameGraphTexture>(gBuffer.depth).extent;
 
@@ -49,6 +49,8 @@ void WeightedBlendedPass::addPass(FrameGraph &fg,
     fg.addCallbackPass<WeightedBlendedData>(
       "WeightedBlended OIT",
       [&](FrameGraph::Builder &builder, WeightedBlendedData &data) {
+        builder.read(frameBlock);
+
         builder.read(gBuffer.depth);
 
         builder.read(brdf.lut);
@@ -95,7 +97,9 @@ void WeightedBlendedPass::addPass(FrameGraph &fg,
         };
         auto &rc = *static_cast<RenderContext *>(ctx);
         const auto framebuffer = rc.beginRendering(renderingInfo);
-        rc.bindTexture(0, getTexture(resources, gBuffer.depth))
+        rc.bindUniformBuffer(0, getBuffer(resources, frameBlock))
+
+          .bindTexture(0, getTexture(resources, gBuffer.depth))
 
           .bindTexture(1, getTexture(resources, brdf.lut))
           .bindTexture(2, getTexture(resources, globalLightProbe.diffuse))
@@ -112,7 +116,8 @@ void WeightedBlendedPass::addPass(FrameGraph &fg,
                              getBuffer(resources, cascades.viewProjMatrices));
 
         for (const auto *renderable : renderables) {
-          const auto &[mesh, material, flags, modelMatrix, _] = *renderable;
+          const auto &[mesh, subMeshIndex, material, flags, modelMatrix, _] =
+            *renderable;
 
           rc.setGraphicsPipeline(_getPipeline(*mesh.vertexFormat, &material));
           _setTransform(*camera, modelMatrix);
@@ -121,7 +126,8 @@ void WeightedBlendedPass::addPass(FrameGraph &fg,
             rc.bindTexture(unit++, *texture);
           }
           rc.setUniform1i("u_MaterialFlags", flags)
-            .draw(mesh.vertexBuffer, mesh.indexBuffer, mesh.geometryInfo);
+            .draw(*mesh.vertexBuffer, *mesh.indexBuffer,
+                  mesh.subMeshes[subMeshIndex].geometryInfo);
         }
         rc.endRendering(framebuffer);
       });
@@ -146,7 +152,6 @@ WeightedBlendedPass::_createBasePassPipeline(const VertexFormat &vertexFormat,
       .addDefine("SHADING_MODEL",
                  static_cast<uint32_t>(material->getShadingModel()))
       .addDefine("BLEND_MODE", static_cast<int32_t>(material->getBlendMode()))
-      .addDefine("MAX_NUM_LIGHTS", m_maxNumLights)
       .addDefine("TILED_LIGHTING", 1)
       .addDefine("TILE_SIZE", m_tileSize)
       .replace("#pragma USER_SAMPLERS",
@@ -165,21 +170,21 @@ WeightedBlendedPass::_createBasePassPipeline(const VertexFormat &vertexFormat,
       .depthCompareOp = CompareOp::LessOrEqual,
     })
     .setBlendState(0,
-                      {
-                        .enabled = true,
-                        .srcColor = BlendFactor::One,
-                        .destColor = BlendFactor::One,
-                        .srcAlpha = BlendFactor::One,
-                        .destAlpha = BlendFactor::One,
-                      })
+                   {
+                     .enabled = true,
+                     .srcColor = BlendFactor::One,
+                     .destColor = BlendFactor::One,
+                     .srcAlpha = BlendFactor::One,
+                     .destAlpha = BlendFactor::One,
+                   })
     .setBlendState(1,
-                      {
-                        .enabled = true,
-                        .srcColor = BlendFactor::Zero,
-                        .destColor = BlendFactor::OneMinusSrcColor,
-                        .srcAlpha = BlendFactor::Zero,
-                        .destAlpha = BlendFactor::OneMinusSrcColor,
-                      })
+                   {
+                     .enabled = true,
+                     .srcColor = BlendFactor::Zero,
+                     .destColor = BlendFactor::OneMinusSrcColor,
+                     .srcAlpha = BlendFactor::Zero,
+                     .destAlpha = BlendFactor::OneMinusSrcColor,
+                   })
     .setRasterizerState({
       .polygonMode = PolygonMode::Fill,
       .cullMode = material->getCullMode(),
