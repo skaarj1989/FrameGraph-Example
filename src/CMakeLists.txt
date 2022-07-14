@@ -100,8 +100,6 @@ add_executable(
   "Passes/SSAO.cpp"
   "Passes/SSR.hpp"
   "Passes/SSR.cpp"
-  #"Passes/BrightPass.hpp"
-  "Passes/BrightPass.cpp"
   "Passes/Downsampler.hpp"
   "Passes/Downsampler.cpp"
   "Passes/Upsampler.hpp"
