@@ -7,6 +7,7 @@ class FrameGraphTexture {
 public:
   struct Desc {
     Extent2D extent;
+    uint32_t depth{0};
     uint32_t numMipLevels{1};
     uint32_t layers{0};
     PixelFormat format{PixelFormat::Unknown};

@@ -181,6 +181,10 @@ Texture RenderContext::createTexture2D(Extent2D extent, PixelFormat pixelFormat,
   return _createImmutableTexture(extent, 0, pixelFormat, 1, numMipLevels,
                                  numLayers);
 }
+Texture RenderContext::createTexture3D(Extent2D extent, uint32_t depth,
+                                       PixelFormat pixelFormat) {
+  return _createImmutableTexture(extent, depth, pixelFormat, 1, 1, 0);
+}
 Texture RenderContext::createCubemap(uint32_t size, PixelFormat pixelFormat,
                                      uint32_t numMipLevels,
                                      uint32_t numLayers) {
@@ -786,7 +790,9 @@ Texture RenderContext::_createImmutableTexture(Extent2D extent, uint32_t depth,
     break;
   }
 
-  return Texture{id, target, pixelFormat, extent, numMipLevels, numLayers};
+  return Texture{
+    id, target, pixelFormat, extent, depth, numMipLevels, numLayers,
+  };
 }
 
 void RenderContext::_createFaceView(Texture &cubeMap, GLuint mipLevel,

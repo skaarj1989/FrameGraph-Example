@@ -89,6 +89,7 @@ public:
   [[nodiscard]] Texture createTexture2D(Extent2D extent, PixelFormat,
                                         uint32_t numMipLevels = 1u,
                                         uint32_t numLayers = 0u);
+  [[nodiscard]] Texture createTexture3D(Extent2D, uint32_t depth, PixelFormat);
   [[nodiscard]] Texture createCubemap(uint32_t size, PixelFormat,
                                       uint32_t numMipLevels = 1u,
                                       uint32_t numLayers = 0u);

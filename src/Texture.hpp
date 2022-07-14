@@ -60,8 +60,8 @@ public:
   [[nodiscard]] PixelFormat getPixelFormat() const;
 
 private:
-  Texture(GLuint id, GLenum type, PixelFormat, Extent2D, uint32_t numMipLevels,
-          uint32_t numLayers);
+  Texture(GLuint id, GLenum type, PixelFormat, Extent2D, uint32_t depth,
+          uint32_t numMipLevels, uint32_t numLayers);
 
   operator GLuint() const;
 
