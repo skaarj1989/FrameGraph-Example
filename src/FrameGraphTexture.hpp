@@ -3,6 +3,8 @@
 #include "Texture.hpp"
 #include <string>
 
+enum class WrapMode { ClampToEdge = 0, ClampToOpaqueBlack, ClampToOpaqueWhite };
+
 class FrameGraphTexture {
 public:
   struct Desc {
@@ -11,7 +13,10 @@ public:
     uint32_t numMipLevels{1};
     uint32_t layers{0};
     PixelFormat format{PixelFormat::Unknown};
+
     bool shadowSampler{false};
+    WrapMode wrapMode{WrapMode::ClampToEdge};
+    TexelFilter filter{TexelFilter::Linear};
   };
 
   void create(const Desc &, void *allocator);

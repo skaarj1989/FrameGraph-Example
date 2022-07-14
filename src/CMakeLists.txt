@@ -61,6 +61,8 @@ add_executable(
   "ShadowMapData.hpp"
   "SceneColorData.hpp"
   "BrightColorData.hpp"
+  "ReflectiveShadowMapData.hpp"
+  "LightPropagationVolumesData.hpp"
 
   # -- WorldRenderer:
   "WorldRenderer.hpp"
@@ -71,6 +73,8 @@ add_executable(
   "ShadowRenderer.cpp"
   "ShadowCascadesBuilder.hpp"
   "ShadowCascadesBuilder.cpp"
+  "GlobalIllumination.hpp"
+  "GlobalIllumination.cpp"
 
   "UploadFrameBlock.hpp"
   "UploadFrameBlock.cpp"

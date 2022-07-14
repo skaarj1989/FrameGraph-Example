@@ -116,7 +116,8 @@ private:
 
 WorldRenderer::WorldRenderer(RenderContext &rc)
     : m_renderContext{rc}, m_ibl{rc}, m_transientResources{rc},
-      m_tiledLighting{rc, kTileSize}, m_shadowRenderer{rc}, m_gBufferPass{rc},
+      m_tiledLighting{rc, kTileSize}, m_shadowRenderer{rc},
+      m_globalIllumination{rc}, m_gBufferPass{rc},
       m_deferredLightingPass{rc, kTileSize}, m_skyboxPass{rc},
       m_weightedBlendedPass{rc, kTileSize}, m_transparencyCompositionPass{rc},
       m_wireframePass{rc}, m_bloom{rc}, m_ssao{rc}, m_ssr{rc},
@@ -166,10 +167,14 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
   auto visibleLights = getVisibleLights(lights, camera.getFrustum());
 
   const bool hasShadows = settings.renderFeatures & RenderFeature_Shadows;
+  const auto directionalLight = getFirstDirectionalLight(visibleLights);
   m_shadowRenderer.buildCascadedShadowMaps(
-    fg, blackboard, camera,
-    hasShadows ? getFirstDirectionalLight(visibleLights) : nullptr,
+    fg, blackboard, camera, hasShadows ? directionalLight : nullptr,
     renderables);
+
+  if (directionalLight) {
+    m_globalIllumination.update(fg, camera, *directionalLight, renderables);
+  }
 
   auto visibleRenderables = getVisibleRenderables(renderables, camera);
 

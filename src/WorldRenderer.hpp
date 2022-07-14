@@ -4,6 +4,7 @@
 #include "TransientResources.hpp"
 #include "TiledLighting.hpp"
 #include "ShadowRenderer.hpp"
+#include "GlobalIllumination.hpp"
 
 #include "Passes/GBufferPass.hpp"
 #include "Passes/DeferredLightingPass.hpp"
@@ -87,6 +88,7 @@ private:
 
   TiledLighting m_tiledLighting;
   ShadowRenderer m_shadowRenderer;
+  GlobalIllumination m_globalIllumination;
 
   GBufferPass m_gBufferPass;
   DeferredLightingPass m_deferredLightingPass;

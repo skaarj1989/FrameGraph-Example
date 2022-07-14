@@ -10,8 +10,9 @@ namespace std {
 template <> struct hash<FrameGraphTexture::Desc> {
   std::size_t operator()(const FrameGraphTexture::Desc &desc) const noexcept {
     std::size_t h{0};
-    hashCombine(h, desc.extent.width, desc.extent.height, desc.numMipLevels,
-                desc.layers, desc.format, desc.shadowSampler);
+    hashCombine(h, desc.extent.width, desc.extent.height, desc.depth,
+                desc.numMipLevels, desc.layers, desc.format, desc.shadowSampler,
+                desc.wrapMode, desc.filter);
     return h;
   }
 };
@@ -84,19 +85,39 @@ TransientResources::acquireTexture(const FrameGraphTexture::Desc &desc) {
   const auto h = std::hash<FrameGraphTexture::Desc>{}(desc);
   auto &pool = m_texturePools[h];
   if (pool.empty()) {
-    auto texture = m_renderContext.createTexture2D(
-      desc.extent, desc.format, desc.numMipLevels, desc.layers);
-    const auto addressMode = desc.shadowSampler
-                               ? SamplerAddressMode::ClampToBorder
-                               : SamplerAddressMode::ClampToEdge;
+    Texture texture;
+    if (desc.depth > 0) {
+      texture =
+        m_renderContext.createTexture3D(desc.extent, desc.depth, desc.format);
+    } else {
+      texture = m_renderContext.createTexture2D(desc.extent, desc.format,
+                                                desc.numMipLevels, desc.layers);
+    }
+
+    glm::vec4 borderColor{0.0f};
+    auto addressMode = SamplerAddressMode::ClampToEdge;
+    switch (desc.wrapMode) {
+    case WrapMode::ClampToEdge:
+      addressMode = SamplerAddressMode::ClampToEdge;
+      break;
+    case WrapMode::ClampToOpaqueBlack:
+      addressMode = SamplerAddressMode::ClampToBorder;
+      borderColor = glm::vec4{0.0f, 0.0f, 0.0f, 1.0f};
+      break;
+    case WrapMode::ClampToOpaqueWhite:
+      addressMode = SamplerAddressMode::ClampToBorder;
+      borderColor = glm::vec4{1.0f};
+      break;
+    }
     SamplerInfo samplerInfo{
-      .minFilter = TexelFilter::Linear,
+      .minFilter = desc.filter,
       .mipmapMode =
-        desc.numMipLevels > 1 ? MipmapMode::Linear : MipmapMode::None,
-      .magFilter = TexelFilter::Linear,
+        desc.numMipLevels > 1 ? MipmapMode::Nearest : MipmapMode::None,
+      .magFilter = desc.filter,
       .addressModeS = addressMode,
       .addressModeT = addressMode,
-      .borderColor = glm::vec4{1.0f},
+      .addressModeR = addressMode,
+      .borderColor = borderColor,
     };
     if (desc.shadowSampler) samplerInfo.compareOp = CompareOp::LessOrEqual;
     m_renderContext.setupSampler(texture, samplerInfo);
