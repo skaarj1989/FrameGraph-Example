@@ -293,7 +293,7 @@ void App::_setupScene() {
   m_renderContext->destroy(*equirectangular);
   m_renderer->setSkybox(m_skybox);
 
-#if 0
+#if 1
   const auto loadMaterial = [&cache =
                                *m_materialCache](const std::string_view name) {
     return cache.load(kAssetsDir /
@@ -307,7 +307,7 @@ void App::_setupScene() {
 
   // clang-format off
   const std::vector<std::string> materialNames{
-#if 0
+#if 1
     "stringy_marble",
     "streaky_metal",
     "gold_scuffed",
