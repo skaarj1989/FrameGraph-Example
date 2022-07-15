@@ -247,7 +247,7 @@ material.normal = tangentToWorld(N, texCoord);
 const vec3 temp = texture(t_MetallicRoughness, texCoord).rgb;
 material.metallic = temp.b;
 material.roughness = temp.g;
-material.ambientOcclusion = temp.r; 
+//material.ambientOcclusion = temp.r; 
 #endif
 )";
 

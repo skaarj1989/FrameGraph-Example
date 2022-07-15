@@ -6,6 +6,7 @@
 struct AABB {
   glm::vec3 min, max;
 
+  [[nodiscard]] glm::vec3 getExtent() const;
   [[nodiscard]] glm::vec3 getCenter() const;
   [[nodiscard]] float getRadius() const;
 

@@ -57,7 +57,7 @@ struct BlendState {
 
   auto operator<=>(const BlendState &) const = default;
 };
-constexpr auto kMaxNumBlendStates = 2;
+constexpr auto kMaxNumBlendStates = 4;
 
 enum class PolygonMode : GLenum {
   Point = GL_POINT,

@@ -12,9 +12,11 @@
 #include "../LightsData.hpp"
 #include "../LightCullingData.hpp"
 #include "../ShadowMapData.hpp"
+#include "../LightPropagationVolumesData.hpp"
 #include "../GBufferData.hpp"
 #include "../SSAOData.hpp"
 
+#include "../Grid.hpp"
 #include "../ShaderCodeBuilder.hpp"
 
 #include "TracyOpenGL.hpp"
@@ -46,8 +48,8 @@ DeferredLightingPass::~DeferredLightingPass() {
 }
 
 FrameGraphResource
-DeferredLightingPass::addPass(FrameGraph &fg,
-                              FrameGraphBlackboard &blackboard) {
+DeferredLightingPass::addPass(FrameGraph &fg, FrameGraphBlackboard &blackboard,
+                              const Grid &grid) {
   const auto [frameBlock] = blackboard.get<FrameData>();
 
   const auto &gBuffer = blackboard.get<GBufferData>();
@@ -62,6 +64,7 @@ DeferredLightingPass::addPass(FrameGraph &fg,
   const auto maybeSSAO = blackboard.try_get<SSAOData>();
 
   const auto &cascades = blackboard.get<ShadowMapData>();
+  const auto *LPV = blackboard.try_get<LightPropagationVolumesData>();
 
   struct Data {
     FrameGraphResource sceneColor;
@@ -87,6 +90,12 @@ DeferredLightingPass::addPass(FrameGraph &fg,
 
       builder.read(cascades.cascadedShadowMaps);
       builder.read(cascades.viewProjMatrices);
+
+      if (LPV) {
+        builder.read(LPV->r);
+        builder.read(LPV->g);
+        builder.read(LPV->b);
+      }
 
       if (maybeSSAO) builder.read(maybeSSAO->ssao);
 
@@ -132,6 +141,16 @@ DeferredLightingPass::addPass(FrameGraph &fg,
 
       rc.bindTexture(9, getTexture(resources, cascades.cascadedShadowMaps))
         .bindUniformBuffer(1, getBuffer(resources, cascades.viewProjMatrices));
+
+      if (LPV) {
+        rc.bindTexture(10, getTexture(resources, LPV->r))
+          .bindTexture(11, getTexture(resources, LPV->g))
+          .bindTexture(12, getTexture(resources, LPV->b));
+
+        rc.setUniformVec3("u_MinCorner", grid.aabb.min)
+          .setUniformVec3("u_GridSize", grid.size)
+          .setUniform1f("u_CellSize", grid.cellSize);
+      }
 
       rc.drawFullScreenTriangle().endRendering(framebuffer);
     });

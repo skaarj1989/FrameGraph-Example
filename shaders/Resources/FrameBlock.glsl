@@ -17,6 +17,7 @@ layout(binding = 0, std140) uniform FrameBlock {
   uvec2 resolution;
   Camera camera;
   uint renderFeatures;
+  uint debugFlags;
 }
 u_Frame;
 
@@ -29,8 +30,13 @@ vec2 getTexelSize() { return 1.0 / vec2(u_Frame.resolution); }
 vec3 getCameraPosition() { return u_Frame.camera.inversedView[3].xyz; }
 
 const uint RenderFeature_Shadows = 1 << 1;
-const uint RenderFeature_SSAO = 1 << 2;
+const uint RenderFeature_GI = 1 << 2;
+const uint RenderFeature_SSAO = 1 << 3;
 
 bool hasRenderFeatures(uint f) { return (u_Frame.renderFeatures & f) == f; }
+
+const uint DebugFlag_RadianceOnly = 1 << 4;
+
+bool hasDebugFlags(uint f) { return (u_Frame.debugFlags & f) == f; }
 
 #endif

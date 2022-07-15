@@ -52,6 +52,13 @@ void renderSettingsWidget(RenderSettings &settings) {
     ImGui::Text("Features:");
     ImGui::CheckboxFlags("Shadows", &settings.renderFeatures,
                          RenderFeature_Shadows);
+    ImGui::CheckboxFlags("GlobalIllumination", &settings.renderFeatures,
+                         RenderFeature_GI);
+
+    if (settings.renderFeatures & RenderFeature_GI) {
+      ImGui::SliderInt("NumPropagations##GI",
+                       &settings.globalIllumination.numPropagations, 1, 12);
+    }
 
     ImGui::CheckboxFlags("SSAO", &settings.renderFeatures, RenderFeature_SSAO);
     ImGui::CheckboxFlags("SSR", &settings.renderFeatures, RenderFeature_SSR);
@@ -82,6 +89,9 @@ void renderSettingsWidget(RenderSettings &settings) {
                          DebugFlag_Wireframe);
     ImGui::CheckboxFlags("Visualize Cascade Splits", &settings.debugFlags,
                          DebugFlag_CascadeSplits);
+    ImGui::CheckboxFlags("VPL", &settings.debugFlags, DebugFlag_VPL);
+    ImGui::CheckboxFlags("Radiance", &settings.debugFlags,
+                         DebugFlag_RadianceOnly);
   }
   ImGui::End();
 }
@@ -211,7 +221,7 @@ void App::run() {
 
     m_camera.setPerspective(
       60.0f, static_cast<float>(swapchainExtent.width) / swapchainExtent.height,
-      0.1f, 1000.0f);
+      0.1f, max3(m_sceneAABB.getExtent()));
 
     if (!io.WantCaptureMouse)
       cameraController(m_camera, io.MousePos - lastMousePos, io.MouseDown);
@@ -222,8 +232,8 @@ void App::run() {
     showMetricsOverlay();
     renderSettingsWidget(m_renderSettings);
 
-    m_renderer->drawFrame(m_renderSettings, swapchainExtent, m_camera, m_lights,
-                          m_renderables, deltaTime.count());
+    m_renderer->drawFrame(m_renderSettings, swapchainExtent, m_sceneAABB,
+                          m_camera, m_lights, m_renderables, deltaTime.count());
 
     ImGui::Render();
     m_uiRenderer->draw(ImGui::GetDrawData());
@@ -285,15 +295,15 @@ void App::_setupUi() {
 }
 
 void App::_setupScene() {
-  m_camera.setPosition({10.0f, 8.0f, -10.0f}).setPitch(-25.0f).setYaw(135.0f);
-
   auto equirectangular =
     loadTexture(kAssetsDir / "newport_loft.hdr", *m_renderContext);
   m_skybox = m_cubemapConverter->equirectangularToCubemap(*equirectangular);
   m_renderContext->destroy(*equirectangular);
   m_renderer->setSkybox(m_skybox);
 
-#if 1
+#if 0
+  m_camera.setPosition({10.0f, 8.0f, -10.0f}).setPitch(-25.0f).setYaw(135.0f);
+
   const auto loadMaterial = [&cache =
                                *m_materialCache](const std::string_view name) {
     return cache.load(kAssetsDir /
@@ -328,13 +338,17 @@ void App::_setupScene() {
     });
 
   _createTower({3, 3, 3}, 2.5f, {0.0f, -2.5f, 0.0f}, materials);
+  _spawnPointLights(10, 10, 2.0f);
 #else
+  m_camera.setPosition({42.6f, 28.0f, -7.4f}).setPitch(-25.0f).setYaw(170.0f);
+
   auto sponza = m_meshCache->load(kAssetsDir / "meshes/Sponza/Sponza.gltf");
-  _addRenderable(*sponza, glm::scale(glm::mat4{1.0f}, glm::vec3{5.0f}), {});
+  const glm::mat4 scale = glm::scale(glm::mat4{1.0f}, glm::vec3{5.0f});
+  m_sceneAABB = sponza->aabb.transform(scale);
+  _addRenderable(*sponza, scale, std::nullopt);
 #endif
 
   _createSun();
-  //_spawnPointLights(10, 10, 2.0f);
 }
 
 void App::_addRenderable(
@@ -380,10 +394,10 @@ void App::_createSun() {
   m_lights.push_back(Light{
     .type = LightType::Directional,
     .visible = true,
-    //.direction = glm::vec3{0.5f, -0.5f, 0.0f},
-    .direction = glm::normalize(glm::vec3{0.0f, -1.0f, 0.2f}),
-    .color = glm::vec3{0.635f, 0.811f, 0.996f},
-    .intensity = 6.0f,
+    //.direction = glm::vec3{-0.875632942f, 0.478866994f, 0.0628755689},
+    .direction = glm::vec3{-0.551486731f, -0.827472687f, 0.105599940f},
+    .color = glm::vec3{1.0f},
+    .intensity = 10.0f,
   });
 }
 void App::_spawnPointLights(uint16_t width, uint16_t depth, float step) {
@@ -410,6 +424,9 @@ void App::_spawnPointLights(uint16_t width, uint16_t depth, float step) {
 
 void App::_update(fsec dt) {
   if (ImGui::Begin("Scene")) {
+    const auto extent = m_sceneAABB.getExtent();
+    ImGui::Text("Extent: [%.2f, %.2f, %.2f]", extent.x, extent.y, extent.z);
+
     if (ImGui::CollapsingHeader("Camera")) {
       const auto &position = m_camera.getPosition();
       ImGui::Text("Position = [%.2f, %.2f, %.2f]", position.x, position.y,
@@ -435,8 +452,10 @@ void App::_update(fsec dt) {
         if (ImGui::Button("Animate")) animate = !animate;
 
         if (animate) {
+          static float speed = 15.0f;
+          ImGui::SliderFloat("deg/s", &speed, 0.01f, 90.0f);
           auto &direction = light->direction;
-          direction = glm::rotateY(direction, glm::radians(15.0f) * dt.count());
+          direction = glm::rotateY(direction, glm::radians(speed) * dt.count());
         }
       }
     }

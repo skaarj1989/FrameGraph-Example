@@ -112,6 +112,7 @@ RenderContext::RenderContext() {
 #endif
   glFrontFace(GL_CCW);
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+  glEnable(GL_PROGRAM_POINT_SIZE);
 
   glCreateVertexArrays(1, &m_dummyVAO);
 }
@@ -218,6 +219,10 @@ RenderContext &RenderContext::setupSampler(Texture &texture,
                       static_cast<GLenum>(samplerInfo.addressModeT));
   glTextureParameteri(texture, GL_TEXTURE_WRAP_R,
                       static_cast<GLenum>(samplerInfo.addressModeR));
+
+  glTextureParameterf(texture, GL_TEXTURE_MAX_ANISOTROPY,
+                      samplerInfo.maxAnisotropy);
+
   if (samplerInfo.compareOp.has_value()) {
     glTextureParameteri(texture, GL_TEXTURE_COMPARE_MODE,
                         GL_COMPARE_REF_TO_TEXTURE);
@@ -830,6 +835,10 @@ void RenderContext::_attachTexture(GLuint framebuffer, GLenum attachment,
     assert(maybeLayer.has_value());
     glNamedFramebufferTextureLayer(framebuffer, attachment, image, mipLevel,
                                    maybeLayer.value_or(0));
+    break;
+
+  case GL_TEXTURE_3D:
+    glNamedFramebufferTexture(framebuffer, attachment, image, 0);
     break;
 
   default:

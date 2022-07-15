@@ -15,6 +15,7 @@ add_executable(
   "ShaderCodeBuilder.hpp"
   "ShaderCodeBuilder.inl"
   "ShaderCodeBuilder.cpp"
+  "Grid.hpp"
 
   "MeshImporter.hpp"
   "MeshImporter.cpp"

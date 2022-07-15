@@ -81,6 +81,8 @@ private:
   std::unique_ptr<MaterialCache> m_materialCache;
   std::unique_ptr<MeshCache> m_meshCache;
 
+  AABB m_sceneAABB{.min = glm::vec3{-250.0f}, .max = glm::vec3{250.0f}};
+
   Texture m_skybox;
 
   PerspectiveCamera m_camera;
