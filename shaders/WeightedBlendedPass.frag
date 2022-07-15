@@ -43,7 +43,7 @@ _DECLARE_LIGHT_BUFFER(0, g_LightBuffer);
 
 #include <Material.glsl>
 
-layout(location = 3) uniform int u_MaterialFlags = 0;
+layout(location = 12) uniform int u_MaterialFlags = 0;
 
 layout(location = 0) out vec4 Accum;
 layout(location = 1) out float Reveal;
@@ -77,20 +77,24 @@ void main() {
   // Ambient lighting:
   //
 
-  // clang-format off
-  const LightContribution ambientLighting = IBL_AmbientLighting(
-    diffuseColor,
-    F0,
-    material.specular,
-    material.roughness,
-    N,
-    V,
-    NdotV
-  );
-  // clang-format on
+  vec3 Lo_diffuse = vec3(0.0);
+  vec3 Lo_specular = vec3(0.0);
 
-  vec3 Lo_diffuse = ambientLighting.diffuse;
-  vec3 Lo_specular = ambientLighting.specular;
+  if (hasRenderFeatures(RenderFeature_IBL)) {
+    // clang-format off
+    const LightContribution ambientLighting = IBL_AmbientLighting(
+      diffuseColor,
+      F0,
+      material.specular,
+      material.roughness,
+      N,
+      V,
+      NdotV
+    );
+    // clang-format on
+    Lo_diffuse = ambientLighting.diffuse;
+    Lo_specular = ambientLighting.specular;
+  }
 
   //
   // Direct lighting:

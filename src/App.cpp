@@ -59,6 +59,8 @@ void renderSettingsWidget(RenderSettings &settings) {
                        &settings.globalIllumination.numPropagations, 1, 12);
     }
 
+    ImGui::CheckboxFlags("IBL", &settings.renderFeatures, RenderFeature_IBL);
+
     ImGui::CheckboxFlags("SSAO", &settings.renderFeatures, RenderFeature_SSAO);
     ImGui::CheckboxFlags("SSR", &settings.renderFeatures, RenderFeature_SSR);
 

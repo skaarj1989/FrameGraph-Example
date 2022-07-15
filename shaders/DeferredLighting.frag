@@ -120,14 +120,21 @@ void main() {
   vec3 Lo_diffuse = vec3(0.0);
   vec3 Lo_specular = vec3(0.0);
 
-#if 0
-  // clang-format off
-  const LightContribution ambientLighting = IBL_AmbientLighting(
-    diffuseColor, F0, specularWeight, roughness, N, V, NdotV);
-  // clang-format on
-   Lo_diffuse = ambientLighting.diffuse * ao;
-   Lo_specular = ambientLighting.specular * ao;
-#endif
+  if (hasRenderFeatures(RenderFeature_IBL)) {
+    // clang-format off
+    const LightContribution ambientLighting = IBL_AmbientLighting(
+      diffuseColor,
+      F0,
+      specularWeight,
+      roughness,
+      N,
+      V,
+      NdotV
+    );
+    // clang-format on
+    Lo_diffuse = ambientLighting.diffuse * ao;
+    Lo_specular = ambientLighting.specular * ao;
+  }
 
   if (hasRenderFeatures(RenderFeature_GI)) {
     const vec3 cellCoords =
