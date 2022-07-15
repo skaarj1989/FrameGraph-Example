@@ -20,7 +20,7 @@ namespace {
 
 constexpr auto kFirstFreeTextureBinding = 0;
 
-constexpr auto kShadowMapSize = 1024;
+constexpr auto kShadowMapSize = 2048;
 constexpr auto kNumCascades = 4;
 
 static_assert(kNumCascades <= 4);

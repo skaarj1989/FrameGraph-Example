@@ -54,7 +54,6 @@ void renderSettingsWidget(RenderSettings &settings) {
                          RenderFeature_Shadows);
     ImGui::CheckboxFlags("GlobalIllumination", &settings.renderFeatures,
                          RenderFeature_GI);
-
     if (settings.renderFeatures & RenderFeature_GI) {
       ImGui::SliderInt("NumPropagations##GI",
                        &settings.globalIllumination.numPropagations, 1, 12);
@@ -67,8 +66,10 @@ void renderSettingsWidget(RenderSettings &settings) {
 
     ImGui::CheckboxFlags("Bloom", &settings.renderFeatures,
                          RenderFeature_Bloom);
-    ImGui::SliderFloat("Radius", &settings.bloom.radius, 0.001f, 1.0f);
-    ImGui::SliderFloat("Strength", &settings.bloom.strength, 0.001f, 1.0f);
+    if (settings.renderFeatures & RenderFeature_Bloom) {
+      ImGui::SliderFloat("Radius", &settings.bloom.radius, 0.001f, 1.0f);
+      ImGui::SliderFloat("Strength", &settings.bloom.strength, 0.001f, 1.0f);
+    }
 
     ImGui::Separator();
 
@@ -87,11 +88,15 @@ void renderSettingsWidget(RenderSettings &settings) {
     ImGui::Text("DebugFlags:");
     ImGui::CheckboxFlags("Wireframe", &settings.debugFlags,
                          DebugFlag_Wireframe);
-    ImGui::CheckboxFlags("Visualize Cascade Splits", &settings.debugFlags,
-                         DebugFlag_CascadeSplits);
-    ImGui::CheckboxFlags("VPL", &settings.debugFlags, DebugFlag_VPL);
-    ImGui::CheckboxFlags("Radiance", &settings.debugFlags,
-                         DebugFlag_RadianceOnly);
+    if (settings.renderFeatures & RenderFeature_Shadows) {
+      ImGui::CheckboxFlags("Visualize Cascade Splits", &settings.debugFlags,
+                           DebugFlag_CascadeSplits);
+    }
+    if (settings.renderFeatures & RenderFeature_GI) {
+      ImGui::CheckboxFlags("VPL", &settings.debugFlags, DebugFlag_VPL);
+      ImGui::CheckboxFlags("Radiance", &settings.debugFlags,
+                           DebugFlag_RadianceOnly);
+    }
   }
   ImGui::End();
 }
