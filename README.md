@@ -1,6 +1,6 @@
 # FrameGraph Example
 
-<img src="media/screenshot1.png" width="400px"/> <img src="media/screenshot2.png" width="400px"/>
+<img src="media/screenshot1.png" width="400px"/> <img src="media/screenshot3.png" width="400px"/>
 
 ![graph](media/fg.svg)
 
@@ -12,6 +12,7 @@
 - Weighted Blended Order Independent Transparency
 - Normal/Parallax Mapping
 - Cascaded ShadowMaps
+- Global Illumination (Light Propagation Volumes)
 - Skybox
 - Screen Space Ambient Occlusion
 - Screen Space Reflections
@@ -49,7 +50,7 @@ VCPKG_DEFAULT_TRIPLET=x64-windows
 Install required dependencies
 
 ```bash
-> vcpkg install spdlog glm glfw3 stb nlohmann-json imgui
+> vcpkg install spdlog glm glfw3 stb nlohmann-json imgui assimp
 ```
 
 ## Dependencies
@@ -64,10 +65,12 @@ Install required dependencies
 - [ImGui](https://github.com/ocornut/imgui)
 - [Tracy Profiler](https://github.com/wolfpld/tracy)
 - [nlohmann-json](https://github.com/nlohmann/json)
+- [assimp](https://github.com/assimp/assimp)
 
 ## Acknowledgments
 
 - [Forward vs Deferred vs Forward+ Rendering with DirectX 11](https://www.3dgep.com/forward-plus/)
+- [Light Propagation Volumes](http://blog.blackhc.net/2010/07/light-propagation-volumes/)
 
 ## License
 

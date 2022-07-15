@@ -29,8 +29,9 @@ struct LightProbe {
 enum RenderFeature_ : uint32_t {
   RenderFeature_None = 0,
 
-  RenderFeature_Shadows = 1 << 1,
-  RenderFeature_GI = 1 << 2,
+  RenderFeature_Shadows = 1 << 0,
+  RenderFeature_GI = 1 << 1,
+  RenderFeature_IBL = 1 << 2,
   RenderFeature_SSAO = 1 << 3,
   RenderFeature_SSR = 1 << 4,
   RenderFeature_Bloom = 1 << 5,
@@ -46,10 +47,10 @@ enum RenderFeature_ : uint32_t {
 
 enum DebugFlag_ : uint32_t {
   DebugFlag_None = 0,
-  DebugFlag_Wireframe = 1 << 1,
-  DebugFlag_CascadeSplits = 1 << 2,
-  DebugFlag_VPL = 1 << 3,
-  DebugFlag_RadianceOnly = 1 << 4,
+  DebugFlag_Wireframe = 1 << 0,
+  DebugFlag_CascadeSplits = 1 << 1,
+  DebugFlag_VPL = 1 << 2,
+  DebugFlag_RadianceOnly = 1 << 3,
 };
 
 struct RenderSettings {
