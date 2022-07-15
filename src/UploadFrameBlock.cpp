@@ -35,6 +35,7 @@ struct GPUFrameBlock {
   Extent2D resolution{0};
   GPUCamera camera;
   uint32_t renderFeatures{0};
+  uint32_t debugFlags{0};
 };
 
 } // namespace
@@ -58,6 +59,7 @@ void uploadFrameBlock(FrameGraph &fg, FrameGraphBlackboard &blackboard,
         .resolution = frameInfo.resolution,
         .camera = GPUCamera{frameInfo.camera},
         .renderFeatures = frameInfo.features,
+        .debugFlags = frameInfo.debugFlags,
       };
       static_cast<RenderContext *>(ctx)->upload(
         getBuffer(resources, data.frameBlock), 0, sizeof(GPUFrameBlock),

@@ -4,6 +4,7 @@
 #include "TransientResources.hpp"
 #include "TiledLighting.hpp"
 #include "ShadowRenderer.hpp"
+#include "GlobalIllumination.hpp"
 
 #include "Passes/GBufferPass.hpp"
 #include "Passes/DeferredLightingPass.hpp"
@@ -28,12 +29,14 @@ struct LightProbe {
 enum RenderFeature_ : uint32_t {
   RenderFeature_None = 0,
 
-  RenderFeature_Shadows = 1 << 1,
-  RenderFeature_SSAO = 1 << 2,
-  RenderFeature_SSR = 1 << 3,
-  RenderFeature_Bloom = 1 << 4,
-  RenderFeature_FXAA = 1 << 5,
-  RenderFeature_Vignette = 1 << 6,
+  RenderFeature_Shadows = 1 << 0,
+  RenderFeature_GI = 1 << 1,
+  RenderFeature_IBL = 1 << 2,
+  RenderFeature_SSAO = 1 << 3,
+  RenderFeature_SSR = 1 << 4,
+  RenderFeature_Bloom = 1 << 5,
+  RenderFeature_FXAA = 1 << 6,
+  RenderFeature_Vignette = 1 << 7,
 
   RenderFeature_Default = RenderFeature_Shadows | RenderFeature_SSAO |
                           RenderFeature_Bloom | RenderFeature_FXAA |
@@ -44,8 +47,10 @@ enum RenderFeature_ : uint32_t {
 
 enum DebugFlag_ : uint32_t {
   DebugFlag_None = 0,
-  DebugFlag_Wireframe = 1 << 1,
-  DebugFlag_CascadeSplits = 1 << 2,
+  DebugFlag_Wireframe = 1 << 0,
+  DebugFlag_CascadeSplits = 1 << 1,
+  DebugFlag_VPL = 1 << 2,
+  DebugFlag_RadianceOnly = 1 << 3,
 };
 
 struct RenderSettings {
@@ -55,6 +60,9 @@ struct RenderSettings {
     float radius{0.005f};
     float strength{0.04f};
   } bloom;
+  struct {
+    int32_t numPropagations{6};
+  } globalIllumination;
   Tonemap tonemap{Tonemap::ACES};
   uint32_t debugFlags{0u};
 };
@@ -66,7 +74,7 @@ public:
 
   void setSkybox(Texture &cubemap);
 
-  void drawFrame(const RenderSettings &, Extent2D resolution,
+  void drawFrame(const RenderSettings &, Extent2D resolution, const AABB &,
                  const PerspectiveCamera &, std::span<const Light>,
                  std::span<const Renderable>, float deltaTime);
 
@@ -87,6 +95,7 @@ private:
 
   TiledLighting m_tiledLighting;
   ShadowRenderer m_shadowRenderer;
+  GlobalIllumination m_globalIllumination;
 
   GBufferPass m_gBufferPass;
   DeferredLightingPass m_deferredLightingPass;

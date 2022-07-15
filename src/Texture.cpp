@@ -36,9 +36,11 @@ uint32_t Texture::getNumLayers() const { return m_numLayers; }
 PixelFormat Texture::getPixelFormat() const { return m_pixelFormat; }
 
 Texture::Texture(GLuint id, GLenum type, PixelFormat pixelFormat,
-                 Extent2D extent, uint32_t numMipLevels, uint32_t numLayers)
-    : m_id{id}, m_type{type}, m_extent{extent}, m_numMipLevels{numMipLevels},
-      m_numLayers{numLayers}, m_pixelFormat{pixelFormat} {}
+                 Extent2D extent, uint32_t depth, uint32_t numMipLevels,
+                 uint32_t numLayers)
+    : m_id{id}, m_type{type}, m_extent{extent}, m_depth{depth},
+      m_numMipLevels{numMipLevels}, m_numLayers{numLayers}, m_pixelFormat{
+                                                              pixelFormat} {}
 
 Texture::operator GLuint() const { return m_id; }
 

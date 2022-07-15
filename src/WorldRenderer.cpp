@@ -116,7 +116,8 @@ private:
 
 WorldRenderer::WorldRenderer(RenderContext &rc)
     : m_renderContext{rc}, m_ibl{rc}, m_transientResources{rc},
-      m_tiledLighting{rc, kTileSize}, m_shadowRenderer{rc}, m_gBufferPass{rc},
+      m_tiledLighting{rc, kTileSize}, m_shadowRenderer{rc},
+      m_globalIllumination{rc}, m_gBufferPass{rc},
       m_deferredLightingPass{rc, kTileSize}, m_skyboxPass{rc},
       m_weightedBlendedPass{rc, kTileSize}, m_transparencyCompositionPass{rc},
       m_wireframePass{rc}, m_bloom{rc}, m_ssao{rc}, m_ssr{rc},
@@ -141,7 +142,7 @@ void WorldRenderer::setSkybox(Texture &cubemap) {
 }
 
 void WorldRenderer::drawFrame(const RenderSettings &settings,
-                              Extent2D resolution,
+                              Extent2D resolution, const AABB &sceneAABB,
                               const PerspectiveCamera &camera,
                               std::span<const Light> lights,
                               std::span<const Renderable> renderables,
@@ -161,15 +162,25 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
                      .resolution = resolution,
                      .camera = camera,
                      .features = settings.renderFeatures,
+                     .debugFlags = settings.debugFlags,
                    });
 
   auto visibleLights = getVisibleLights(lights, camera.getFrustum());
 
   const bool hasShadows = settings.renderFeatures & RenderFeature_Shadows;
+  const auto directionalLight = getFirstDirectionalLight(visibleLights);
   m_shadowRenderer.buildCascadedShadowMaps(
-    fg, blackboard, camera,
-    hasShadows ? getFirstDirectionalLight(visibleLights) : nullptr,
+    fg, blackboard, camera, hasShadows ? directionalLight : nullptr,
     renderables);
+
+  const Grid sceneGrid{sceneAABB};
+
+  const bool hasGI = settings.renderFeatures & RenderFeature_GI;
+  if (hasGI && directionalLight) {
+    m_globalIllumination.update(fg, blackboard, sceneGrid, camera,
+                                *directionalLight, renderables,
+                                settings.globalIllumination.numPropagations);
+  }
 
   auto visibleRenderables = getVisibleRenderables(renderables, camera);
 
@@ -194,7 +205,7 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
   }
 
   auto &sceneColor = blackboard.add<SceneColorData>();
-  sceneColor.hdr = m_deferredLightingPass.addPass(fg, blackboard);
+  sceneColor.hdr = m_deferredLightingPass.addPass(fg, blackboard, sceneGrid);
   sceneColor.hdr =
     m_skyboxPass.addPass(fg, blackboard, sceneColor.hdr, m_skybox);
 
@@ -219,13 +230,20 @@ void WorldRenderer::drawFrame(const RenderSettings &settings,
     sceneColor.ldr = m_wireframePass.addGeometryPass(
       fg, blackboard, sceneColor.ldr, camera, visibleRenderables);
   }
+
+  if (hasGI && settings.debugFlags & DebugFlag_VPL) {
+    sceneColor.ldr = m_globalIllumination.addDebugPass(
+      fg, blackboard, sceneGrid, camera, sceneColor.ldr);
+  }
+
   const auto antiAliased = m_fxaa.addPass(fg, blackboard, sceneColor.ldr);
   if (settings.renderFeatures & RenderFeature_FXAA)
     sceneColor.ldr = antiAliased;
 
-  if (hasShadows && (settings.debugFlags & DebugFlag_CascadeSplits))
+  if (hasShadows && (settings.debugFlags & DebugFlag_CascadeSplits)) {
     sceneColor.ldr =
       m_shadowRenderer.visualizeCascades(fg, blackboard, sceneColor.ldr);
+  }
 
   const auto afterVignette = m_vignettePass.addPass(fg, sceneColor.ldr);
   if (settings.renderFeatures & RenderFeature_Vignette)

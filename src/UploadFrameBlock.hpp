@@ -10,5 +10,6 @@ struct FrameInfo {
   Extent2D resolution;
   const PerspectiveCamera &camera;
   uint32_t features;
+  uint32_t debugFlags;
 };
 void uploadFrameBlock(FrameGraph &, FrameGraphBlackboard &, const FrameInfo &);

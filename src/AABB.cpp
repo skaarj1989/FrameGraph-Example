@@ -1,10 +1,8 @@
 #include "AABB.hpp"
 
+glm::vec3 AABB::getExtent() const { return max - min; }
 glm::vec3 AABB::getCenter() const { return (max + min) * 0.5f; }
-float AABB::getRadius() const {
-  const auto extent = (max - min) * 0.5f;
-  return glm::length(extent);
-}
+float AABB::getRadius() const { return glm::length(getExtent() * 0.5f); }
 
 AABB AABB::transform(const glm::mat4 &m) const {
   // https://dev.theomader.com/transform-bounding-boxes/

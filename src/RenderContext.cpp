@@ -112,6 +112,7 @@ RenderContext::RenderContext() {
 #endif
   glFrontFace(GL_CCW);
   glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+  glEnable(GL_PROGRAM_POINT_SIZE);
 
   glCreateVertexArrays(1, &m_dummyVAO);
 }
@@ -157,10 +158,12 @@ GLuint RenderContext::getVertexArray(const VertexAttributes &attributes) {
   return it->second;
 }
 
-GLuint RenderContext::createGraphicsProgram(const std::string_view vertCode,
-                                            const std::string_view fragCode) {
+GLuint RenderContext::createGraphicsProgram(
+  const std::string_view vertCode, const std::string_view fragCode,
+  std::optional<const std::string_view> geomCode) {
   return _createShaderProgram({
     _createShader(GL_VERTEX_SHADER, vertCode),
+    geomCode ? _createShader(GL_GEOMETRY_SHADER, *geomCode) : GL_NONE,
     _createShader(GL_FRAGMENT_SHADER, fragCode),
   });
 }
@@ -180,6 +183,10 @@ Texture RenderContext::createTexture2D(Extent2D extent, PixelFormat pixelFormat,
     numMipLevels = calcMipLevels(glm::max(extent.width, extent.height));
   return _createImmutableTexture(extent, 0, pixelFormat, 1, numMipLevels,
                                  numLayers);
+}
+Texture RenderContext::createTexture3D(Extent2D extent, uint32_t depth,
+                                       PixelFormat pixelFormat) {
+  return _createImmutableTexture(extent, depth, pixelFormat, 1, 1, 0);
 }
 Texture RenderContext::createCubemap(uint32_t size, PixelFormat pixelFormat,
                                      uint32_t numMipLevels,
@@ -212,6 +219,10 @@ RenderContext &RenderContext::setupSampler(Texture &texture,
                       static_cast<GLenum>(samplerInfo.addressModeT));
   glTextureParameteri(texture, GL_TEXTURE_WRAP_R,
                       static_cast<GLenum>(samplerInfo.addressModeR));
+
+  glTextureParameterf(texture, GL_TEXTURE_MAX_ANISOTROPY,
+                      samplerInfo.maxAnisotropy);
+
   if (samplerInfo.compareOp.has_value()) {
     glTextureParameteri(texture, GL_TEXTURE_COMPARE_MODE,
                         GL_COMPARE_REF_TO_TEXTURE);
@@ -786,7 +797,9 @@ Texture RenderContext::_createImmutableTexture(Extent2D extent, uint32_t depth,
     break;
   }
 
-  return Texture{id, target, pixelFormat, extent, numMipLevels, numLayers};
+  return Texture{
+    id, target, pixelFormat, extent, depth, numMipLevels, numLayers,
+  };
 }
 
 void RenderContext::_createFaceView(Texture &cubeMap, GLuint mipLevel,
@@ -824,6 +837,10 @@ void RenderContext::_attachTexture(GLuint framebuffer, GLenum attachment,
                                    maybeLayer.value_or(0));
     break;
 
+  case GL_TEXTURE_3D:
+    glNamedFramebufferTexture(framebuffer, attachment, image, 0);
+    break;
+
   default:
     assert(false);
   }
@@ -852,7 +869,7 @@ RenderContext::_createShaderProgram(std::initializer_list<GLuint> shaders) {
   const auto program = glCreateProgram();
 
   for (auto shader : shaders)
-    glAttachShader(program, shader);
+    if (shader != GL_NONE) glAttachShader(program, shader);
 
   glLinkProgram(program);
 
@@ -867,8 +884,10 @@ RenderContext::_createShaderProgram(std::initializer_list<GLuint> shaders) {
     throw std::runtime_error{infoLog};
   }
   for (auto shader : shaders) {
-    glDetachShader(program, shader);
-    glDeleteShader(shader);
+    if (shader != GL_NONE) {
+      glDetachShader(program, shader);
+      glDeleteShader(shader);
+    }
   }
 
   return program;

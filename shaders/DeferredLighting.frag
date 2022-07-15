@@ -34,6 +34,10 @@ layout(binding = 0, rgba32ui) restrict readonly uniform uimage2D i_LightGrid;
 
 layout(binding = 9) uniform sampler2DArrayShadow t_CascadedShadowMaps;
 
+layout(binding = 10) uniform sampler3D t_AccumulatedSH_R;
+layout(binding = 11) uniform sampler3D t_AccumulatedSH_G;
+layout(binding = 12) uniform sampler3D t_AccumulatedSH_B;
+
 #include <Lib/Depth.glsl>
 
 #include <Lib/Light.glsl>
@@ -44,6 +48,11 @@ _DECLARE_LIGHT_BUFFER(0, g_LightBuffer);
 
 #define SOFT_SHADOWS 1
 #include <Lib/CSM.glsl>
+#include "LPV.glsl"
+
+layout(location = 12) uniform vec3 u_MinCorner;
+layout(location = 13) uniform vec3 u_GridSize;
+layout(location = 14) uniform float u_CellSize;
 
 #include <MaterialDefines.glsl>
 
@@ -70,8 +79,8 @@ void main() {
   const float roughness = temp.g;
   float ao = temp.b;
   if (hasRenderFeatures(RenderFeature_SSAO)) {
-    ao = min(ao, texture(t_SSAO, v_TexCoord).r);
-    // ao = texture(t_SSAO, v_TexCoord).r;
+    // ao = min(ao, texture(t_SSAO, v_TexCoord).r);
+    ao = texture(t_SSAO, v_TexCoord).r;
   }
 
   temp = texture(t_GBuffer1, v_TexCoord);
@@ -108,21 +117,52 @@ void main() {
   // Ambient lighting:
   //
 
-  // clang-format off
-  
-  const LightContribution ambientLighting = IBL_AmbientLighting(
-    diffuseColor,
-    F0,
-    specularWeight,
-    roughness,
-    N,
-    V,
-    NdotV
-  );
-  // clang-format on
+  vec3 Lo_diffuse = vec3(0.0);
+  vec3 Lo_specular = vec3(0.0);
 
-  vec3 Lo_diffuse = ambientLighting.diffuse * ao;
-  vec3 Lo_specular = ambientLighting.specular * ao;
+  if (hasRenderFeatures(RenderFeature_IBL)) {
+    // clang-format off
+    const LightContribution ambientLighting = IBL_AmbientLighting(
+      diffuseColor,
+      F0,
+      specularWeight,
+      roughness,
+      N,
+      V,
+      NdotV
+    );
+    // clang-format on
+    Lo_diffuse = ambientLighting.diffuse * ao;
+    Lo_specular = ambientLighting.specular * ao;
+  }
+
+  if (hasRenderFeatures(RenderFeature_GI)) {
+    const vec3 cellCoords =
+      (fragPosWorldSpace - u_MinCorner) / u_CellSize / u_GridSize;
+
+    // clang-format off
+    const SHcoeffs coeffs = {
+      texture(t_AccumulatedSH_R, cellCoords, 0),
+      texture(t_AccumulatedSH_G, cellCoords, 0),
+      texture(t_AccumulatedSH_B, cellCoords, 0)
+    };
+    // clang-format on
+
+    const vec4 SH_intensity = SH_evaluate(-N);
+    const vec3 LPV_intensity =
+      vec3(dot(SH_intensity, coeffs.red), dot(SH_intensity, coeffs.green),
+           dot(SH_intensity, coeffs.blue));
+
+    const vec3 LPV_radiance =
+      max(LPV_intensity * 4 / u_CellSize / u_CellSize, 0.0);
+
+    Lo_diffuse += albedo * LPV_radiance * ao;
+
+    if (hasDebugFlags(DebugFlag_RadianceOnly)) {
+      FragColor = LPV_radiance;
+      return;
+    }
+  }
 
   //
   // Direct lighting:

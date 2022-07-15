@@ -20,7 +20,7 @@ namespace {
 
 constexpr auto kFirstFreeTextureBinding = 0;
 
-constexpr auto kShadowMapSize = 1024;
+constexpr auto kShadowMapSize = 2048;
 constexpr auto kNumCascades = 4;
 
 static_assert(kNumCascades <= 4);
@@ -56,8 +56,8 @@ getVisibleShadowCasters(std::span<const Renderable> renderables,
 
   std::vector<const Renderable *> result;
   for (const auto &renderable : renderables) {
-    if ((renderable.flags & MaterialFlag_CastShadow) &&
-        isOpaque(&renderable) && isVisible(renderable.aabb)) {
+    if ((renderable.flags & MaterialFlag_CastShadow) && isOpaque(&renderable) &&
+        isVisible(renderable.aabb)) {
       result.push_back(&renderable);
     }
   }
