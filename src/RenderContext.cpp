@@ -495,24 +495,24 @@ RenderContext &RenderContext::setUniform1f(const std::string_view name,
                                            float f) {
   const auto location =
     glGetUniformLocation(m_currentPipeline.m_program, name.data());
-  assert(location != GL_INVALID_INDEX);
-  glProgramUniform1f(m_currentPipeline.m_program, location, f);
+  if (location != GL_INVALID_INDEX)
+    glProgramUniform1f(m_currentPipeline.m_program, location, f);
   return *this;
 }
 RenderContext &RenderContext::setUniform1i(const std::string_view name,
                                            int32_t i) {
   const auto location =
     glGetUniformLocation(m_currentPipeline.m_program, name.data());
-  assert(location != GL_INVALID_INDEX);
-  glProgramUniform1i(m_currentPipeline.m_program, location, i);
+  if (location != GL_INVALID_INDEX)
+    glProgramUniform1i(m_currentPipeline.m_program, location, i);
   return *this;
 }
 RenderContext &RenderContext::setUniform1ui(const std::string_view name,
                                             uint32_t i) {
   const auto location =
     glGetUniformLocation(m_currentPipeline.m_program, name.data());
-  assert(location != GL_INVALID_INDEX);
-  glProgramUniform1ui(m_currentPipeline.m_program, location, i);
+  if (location != GL_INVALID_INDEX)
+    glProgramUniform1ui(m_currentPipeline.m_program, location, i);
   return *this;
 }
 
@@ -520,18 +520,20 @@ RenderContext &RenderContext::setUniformVec3(const std::string_view name,
                                              const glm::vec3 &v) {
   const auto location =
     glGetUniformLocation(m_currentPipeline.m_program, name.data());
-  assert(location != GL_INVALID_INDEX);
-  glProgramUniform3fv(m_currentPipeline.m_program, location, 1,
-                      glm::value_ptr(v));
+  if (location != GL_INVALID_INDEX) {
+    glProgramUniform3fv(m_currentPipeline.m_program, location, 1,
+                        glm::value_ptr(v));
+  }
   return *this;
 }
 RenderContext &RenderContext::setUniformVec4(const std::string_view name,
                                              const glm::vec4 &v) {
   const auto location =
     glGetUniformLocation(m_currentPipeline.m_program, name.data());
-  assert(location != GL_INVALID_INDEX);
-  glProgramUniform4fv(m_currentPipeline.m_program, location, 1,
-                      glm::value_ptr(v));
+  if (location != GL_INVALID_INDEX) {
+    glProgramUniform4fv(m_currentPipeline.m_program, location, 1,
+                        glm::value_ptr(v));
+  }
   return *this;
 }
 
@@ -539,18 +541,20 @@ RenderContext &RenderContext::setUniformMat3(const std::string_view name,
                                              const glm::mat3 &m) {
   const auto location =
     glGetUniformLocation(m_currentPipeline.m_program, name.data());
-  assert(location != GL_INVALID_INDEX);
-  glProgramUniformMatrix3fv(m_currentPipeline.m_program, location, 1, GL_FALSE,
-                            glm::value_ptr(m));
+  if (location != GL_INVALID_INDEX) {
+    glProgramUniformMatrix3fv(m_currentPipeline.m_program, location, 1,
+                              GL_FALSE, glm::value_ptr(m));
+  }
   return *this;
 }
 RenderContext &RenderContext::setUniformMat4(const std::string_view name,
                                              const glm::mat4 &m) {
   const auto location =
     glGetUniformLocation(m_currentPipeline.m_program, name.data());
-  assert(location != GL_INVALID_INDEX);
-  glProgramUniformMatrix4fv(m_currentPipeline.m_program, location, 1, GL_FALSE,
-                            glm::value_ptr(m));
+  if (location != GL_INVALID_INDEX) {
+    glProgramUniformMatrix4fv(m_currentPipeline.m_program, location, 1,
+                              GL_FALSE, glm::value_ptr(m));
+  }
   return *this;
 }
 
