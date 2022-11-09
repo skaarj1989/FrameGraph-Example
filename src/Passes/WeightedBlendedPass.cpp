@@ -17,7 +17,7 @@
 
 #include "../ShaderCodeBuilder.hpp"
 
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 namespace {
 

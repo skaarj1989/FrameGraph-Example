@@ -19,7 +19,7 @@
 #include "../Grid.hpp"
 #include "../ShaderCodeBuilder.hpp"
 
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 DeferredLightingPass::DeferredLightingPass(RenderContext &rc, uint32_t tileSize)
     : m_renderContext{rc} {

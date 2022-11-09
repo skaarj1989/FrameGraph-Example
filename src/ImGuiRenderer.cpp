@@ -3,7 +3,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "imgui.h"
 
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 #include <span>
 

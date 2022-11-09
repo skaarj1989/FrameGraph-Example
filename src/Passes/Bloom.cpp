@@ -6,7 +6,7 @@
 
 #include "../ShaderCodeBuilder.hpp"
 
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 Bloom::Bloom(RenderContext &rc)
     : m_renderContext{rc}, m_downsampler{rc}, m_upsampler{rc} {

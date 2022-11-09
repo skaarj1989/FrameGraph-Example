@@ -14,8 +14,8 @@
 
 #include "spdlog/spdlog.h"
 
-#include "Tracy.hpp"
-#include "TracyOpenGL.hpp"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 #include <random>
 #include <array>

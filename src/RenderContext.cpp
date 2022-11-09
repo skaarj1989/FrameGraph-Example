@@ -7,8 +7,7 @@
 
 #include <numeric>
 
-#include "Tracy.hpp"
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 namespace {
 

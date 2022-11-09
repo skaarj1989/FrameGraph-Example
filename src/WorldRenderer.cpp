@@ -24,8 +24,8 @@
 #include "LightUtility.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "Tracy.hpp"
-#include "TracyOpenGL.hpp"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 #include <ranges>
 #include <fstream>

@@ -6,7 +6,7 @@
 
 #include "../ShaderCodeBuilder.hpp"
 
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 Blur::Blur(RenderContext &rc) : m_renderContext{rc} {
   ShaderCodeBuilder shaderCodeBuilder;

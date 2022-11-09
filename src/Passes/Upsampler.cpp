@@ -7,7 +7,7 @@
 
 #include "../ShaderCodeBuilder.hpp"
 
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 Upsampler::Upsampler(RenderContext &rc) : m_renderContext{rc} {
   ShaderCodeBuilder shaderCodeBuilder;

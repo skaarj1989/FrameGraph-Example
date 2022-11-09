@@ -6,7 +6,7 @@
 
 #include "../ShaderCodeBuilder.hpp"
 
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 Blit::Blit(RenderContext &rc) : m_renderContext{rc} {
   ShaderCodeBuilder shaderCodeBuilder;

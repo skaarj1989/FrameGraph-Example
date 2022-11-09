@@ -3,7 +3,7 @@
 #include "Hash.hpp"
 #include "spdlog/spdlog.h"
 
-#include "Tracy.hpp"
+#include "tracy/Tracy.hpp"
 
 namespace std {
 

@@ -13,8 +13,8 @@
 #include "ShadowCascadesBuilder.hpp"
 #include "ShaderCodeBuilder.hpp"
 
-#include "Tracy.hpp"
-#include "TracyOpenGL.hpp"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 namespace {
 

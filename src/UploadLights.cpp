@@ -8,7 +8,7 @@
 
 #include "LightsData.hpp"
 
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 #include "RenderContext.hpp"
 

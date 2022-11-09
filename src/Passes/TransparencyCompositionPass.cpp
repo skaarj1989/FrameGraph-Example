@@ -9,7 +9,7 @@
 
 #include "../ShaderCodeBuilder.hpp"
 
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 TransparencyCompositionPass::TransparencyCompositionPass(RenderContext &rc)
     : m_renderContext{rc} {

@@ -10,7 +10,7 @@
 
 #include "../ShaderCodeBuilder.hpp"
 
-#include "TracyOpenGL.hpp"
+#include "tracy/TracyOpenGL.hpp"
 
 SkyboxPass::SkyboxPass(RenderContext &rc) : m_renderContext{rc} {
   ShaderCodeBuilder shaderCodeBuilder;

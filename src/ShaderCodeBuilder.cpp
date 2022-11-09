@@ -2,7 +2,7 @@
 #include "FileUtility.hpp"
 #include "spdlog/spdlog.h"
 
-#include "Tracy.hpp"
+#include "tracy/Tracy.hpp"
 
 #include <unordered_set>
 #include <regex>
