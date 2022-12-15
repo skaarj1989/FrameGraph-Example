@@ -46,7 +46,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   FrameGraph
   GIT_REPOSITORY https://github.com/skaarj1989/FrameGraph.git
-  GIT_TAG master)
+  GIT_TAG wip)
 FetchContent_Declare(
   Tracy
   GIT_REPOSITORY https://github.com/wolfpld/tracy

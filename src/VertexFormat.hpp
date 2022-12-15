@@ -2,6 +2,7 @@
 
 #include "VertexAttributes.hpp"
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 // NOTE: Make sure that the following locations match with the
