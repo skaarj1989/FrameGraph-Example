@@ -186,7 +186,7 @@ target_link_libraries(FrameGraphExample
 )
 
 set_target_properties(FrameGraphExample PROPERTIES
-  VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$(Configuration)")
+  VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/")
 
 add_dependencies(FrameGraphExample Copy-Assets)
 add_dependencies(FrameGraphExample Copy-Shaders)
