@@ -72,8 +72,9 @@ void WeightedBlendedPass::addPass(FrameGraph &fg,
           "Reveal", {.extent = extent, .format = PixelFormat::R8_UNorm});
         data.reveal = builder.write(data.reveal);
       },
-      [=, camera = &camera](const WeightedBlendedData &data,
-                            FrameGraphPassResources &resources, void *ctx) {
+      [=, this, camera = &camera](const WeightedBlendedData &data,
+                                  FrameGraphPassResources &resources,
+                                  void *ctx) {
         NAMED_DEBUG_MARKER("WeightedBlended OIT");
         TracyGpuZone("WeightedBlended OIT");
 

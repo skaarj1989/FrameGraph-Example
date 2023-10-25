@@ -86,8 +86,8 @@ TiledLighting::_buildFrustums(FrameGraph &fg, FrameGraphBlackboard &blackboard,
         builder.create<FrameGraphBuffer>("GridFrustums", {.size = bufferSize});
       data.gridFrustums = builder.write(data.gridFrustums);
     },
-    [=](const FrustumsData &data, FrameGraphPassResources &resources,
-        void *ctx) {
+    [=, this](const FrustumsData &data, FrameGraphPassResources &resources,
+              void *ctx) {
       NAMED_DEBUG_MARKER("BuildFrustums");
       TracyGpuZone("BuildFrustums");
 
@@ -151,7 +151,7 @@ void TiledLighting::_cullLights(FrameGraph &fg,
         data.debugMap = builder.write(*data.debugMap);
       }
     },
-    [=](const Data &data, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const Data &data, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("CullLights");
       TracyGpuZone("CullLights");
 

@@ -54,8 +54,8 @@ void GBufferPass::addGeometryPass(FrameGraph &fg,
         {.extent = resolution, .format = PixelFormat::RGBA8_UNorm});
       data.metallicRoughnessAO = builder.write(data.metallicRoughnessAO);
     },
-    [=, camera = &camera](const GBufferData &data,
-                          FrameGraphPassResources &resources, void *ctx) {
+    [=, this, camera = &camera](const GBufferData &data,
+                                FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("GBuffer");
       TracyGpuZone("GBuffer");
 

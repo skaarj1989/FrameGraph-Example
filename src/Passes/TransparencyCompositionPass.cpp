@@ -29,13 +29,13 @@ TransparencyCompositionPass::TransparencyCompositionPass(RenderContext &rc)
                    .scissorTest = false,
                  })
                  .setBlendState(0,
-                                   {
-                                     .enabled = true,
-                                     .srcColor = BlendFactor::SrcAlpha,
-                                     .destColor = BlendFactor::OneMinusSrcAlpha,
-                                     .srcAlpha = BlendFactor::SrcAlpha,
-                                     .destAlpha = BlendFactor::OneMinusSrcAlpha,
-                                   })
+                                {
+                                  .enabled = true,
+                                  .srcColor = BlendFactor::SrcAlpha,
+                                  .destColor = BlendFactor::OneMinusSrcAlpha,
+                                  .srcAlpha = BlendFactor::SrcAlpha,
+                                  .destAlpha = BlendFactor::OneMinusSrcAlpha,
+                                })
                  .setShaderProgram(program)
                  .build();
 }
@@ -56,7 +56,7 @@ FrameGraphResource TransparencyCompositionPass::addPass(
 
       target = builder.write(target);
     },
-    [=](const auto &, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const auto &, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("TransparencyComposition");
       TracyGpuZone("TrancparencyComposition");
 

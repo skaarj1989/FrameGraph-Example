@@ -46,7 +46,7 @@ FrameGraphResource TonemapPass::addPass(FrameGraph &fg,
         "SceneColor", {.extent = extent, .format = PixelFormat::RGB8_UNorm});
       data.output = builder.write(data.output);
     },
-    [=](const Data &data, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const Data &data, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("Tonemapping");
       TracyGpuZone("Tonemapping");
 

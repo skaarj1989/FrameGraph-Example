@@ -47,7 +47,7 @@ FrameGraphResource Blit::addColor(FrameGraph &fg, FrameGraphResource target,
 
       target = builder.write(target);
     },
-    [=](const auto &, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const auto &, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("AddColor");
       TracyGpuZone("AddColor");
 

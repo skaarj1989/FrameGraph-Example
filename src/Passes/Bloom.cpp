@@ -62,7 +62,7 @@ FrameGraphResource Bloom::compose(FrameGraph &fg, FrameGraphResource scene,
                                                       });
       data.output = builder.write(data.output);
     },
-    [=](const Data &data, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const Data &data, FrameGraphPassResources &resources, void *ctx) {
       auto &rc = *static_cast<RenderContext *>(ctx);
       NAMED_DEBUG_MARKER("Bloom");
       TracyGpuZone("Bloom");

@@ -55,7 +55,7 @@ FrameGraphResource Blur::_addPass(FrameGraph &fg, FrameGraphResource input,
         "Blurred", {.extent = desc.extent, .format = desc.format});
       data.output = builder.write(data.output);
     },
-    [=](const Data &data, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const Data &data, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER(name);
       TracyGpuZone("Blur");
 

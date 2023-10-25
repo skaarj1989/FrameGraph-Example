@@ -25,8 +25,8 @@ FrameGraphResource WireframePass::addGeometryPass(
 
       target = builder.write(target);
     },
-    [=, camera = &camera](const auto &, FrameGraphPassResources &resources,
-                          void *ctx) {
+    [=, this, camera = &camera](const auto &,
+                                FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("WireframePass");
       TracyGpuZone("WireframePass");
 

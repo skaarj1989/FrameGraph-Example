@@ -55,7 +55,7 @@ Downsampler::addPass(FrameGraph &fg, FrameGraphResource input, uint32_t level) {
         });
       data.downsampled = builder.write(data.downsampled);
     },
-    [=](const Data &data, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const Data &data, FrameGraphPassResources &resources, void *ctx) {
       auto &rc = *static_cast<RenderContext *>(ctx);
       NAMED_DEBUG_MARKER("Downsample");
       TracyGpuZone("Downsample");

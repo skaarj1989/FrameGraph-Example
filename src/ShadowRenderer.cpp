@@ -176,7 +176,7 @@ FrameGraphResource ShadowRenderer::visualizeCascades(
 
       target = builder.write(target);
     },
-    [=](const auto &, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const auto &, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("VisualizeCascades");
       TracyGpuZone("VisualizeCascades");
 
@@ -294,7 +294,7 @@ FrameGraphResource ShadowRenderer::_addCascadePass(
       }
       data.output = builder.write(*cascadedShadowMaps);
     },
-    [=, renderables = std::move(renderables)](
+    [=, this, renderables = std::move(renderables)](
       const Data &data, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER(name);
       TracyGpuZone("CSM");

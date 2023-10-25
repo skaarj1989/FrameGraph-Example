@@ -103,7 +103,7 @@ DeferredLightingPass::addPass(FrameGraph &fg, FrameGraphBlackboard &blackboard,
         "SceneColorHDR", {.extent = extent, .format = PixelFormat::RGB16F});
       data.sceneColor = builder.write(data.sceneColor);
     },
-    [=](const Data &data, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const Data &data, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("DeferredLighting");
       TracyGpuZone("DeferredLighting");
 

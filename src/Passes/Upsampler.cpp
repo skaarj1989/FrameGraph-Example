@@ -53,7 +53,7 @@ FrameGraphResource Upsampler::addPass(FrameGraph &fg, FrameGraphResource input,
                      });
       data.upsampled = builder.write(data.upsampled);
     },
-    [=](const Data &data, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const Data &data, FrameGraphPassResources &resources, void *ctx) {
       auto &rc = *static_cast<RenderContext *>(ctx);
       NAMED_DEBUG_MARKER("Upsample");
       TracyGpuZone("Upsample");

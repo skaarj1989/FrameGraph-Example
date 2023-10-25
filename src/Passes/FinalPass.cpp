@@ -136,7 +136,7 @@ void FinalPass::compose(FrameGraph &fg, const FrameGraphBlackboard &blackboard,
       if (mode != Mode_Discard) builder.read(output);
       builder.setSideEffect();
     },
-    [=](const auto &, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const auto &, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("FinalComposition");
       TracyGpuZone("FinalComposition");
 

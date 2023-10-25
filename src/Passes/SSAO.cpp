@@ -41,7 +41,8 @@ void SSAO::addPass(FrameGraph &fg, FrameGraphBlackboard &blackboard) {
         "SSAO", {.extent = extent, .format = PixelFormat::R8_UNorm});
       data.ssao = builder.write(data.ssao);
     },
-    [=](const SSAOData &data, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const SSAOData &data, FrameGraphPassResources &resources,
+              void *ctx) {
       NAMED_DEBUG_MARKER("SSAO");
       TracyGpuZone("SSAO");
 

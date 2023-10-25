@@ -56,7 +56,7 @@ FrameGraphResource SkyboxPass::addPass(FrameGraph &fg,
 
       target = builder.write(target);
     },
-    [=](const auto &, FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const auto &, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("DrawSkybox");
       TracyGpuZone("DrawSkybox");
 

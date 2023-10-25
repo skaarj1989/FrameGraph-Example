@@ -57,8 +57,8 @@ FrameGraphResource SSR::addPass(FrameGraph &fg,
         "Reflections", {.extent = extent, .format = PixelFormat::RGB16F});
       data.reflections = builder.write(data.reflections);
     },
-    [=](const ReflectionsData &data, FrameGraphPassResources &resources,
-        void *ctx) {
+    [=, this](const ReflectionsData &data, FrameGraphPassResources &resources,
+              void *ctx) {
       NAMED_DEBUG_MARKER("SSR");
       TracyGpuZone("SSR");
 

@@ -161,7 +161,7 @@ FrameGraphResource GlobalIllumination::addDebugPass(
 
       target = builder.write(target);
     },
-    [=, vp = camera.getViewProjection()](
+    [=, this, vp = camera.getViewProjection()](
       const auto &, FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("DebugVPL");
       TracyGpuZone("DebugVPL");
@@ -181,8 +181,8 @@ FrameGraphResource GlobalIllumination::addDebugPass(
       auto &rc = *static_cast<RenderContext *>(ctx);
       const auto framebuffer = rc.beginRendering(renderingInfo);
       rc.setGraphicsPipeline(m_debugPipeline)
-        .bindTexture(0, getTexture(resources, RSM.position))  // vert
-        .bindTexture(1, getTexture(resources, RSM.normal))    // vert
+        .bindTexture(0, getTexture(resources, RSM.position)) // vert
+        .bindTexture(1, getTexture(resources, RSM.normal))   // vert
 
         .bindTexture(2, getTexture(resources, LPV.r)) // frag
         .bindTexture(3, getTexture(resources, LPV.g)) // frag
@@ -246,7 +246,7 @@ ReflectiveShadowMapData GlobalIllumination::_addReflectiveShadowMapPass(
       data.normal = builder.write(data.normal);
       data.flux = builder.write(data.flux);
     },
-    [=, renderables = std::move(renderables)](
+    [=, this, renderables = std::move(renderables)](
       const ReflectiveShadowMapData &data, FrameGraphPassResources &resources,
       void *ctx) {
       NAMED_DEBUG_MARKER("ReflectiveShadowMap");
@@ -342,8 +342,8 @@ LightPropagationVolumesData GlobalIllumination::_addRadianceInjectionPass(
       data.g = builder.write(data.g);
       data.b = builder.write(data.b);
     },
-    [=](const LightPropagationVolumesData &data,
-        FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const LightPropagationVolumesData &data,
+              FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("RadianceInjection");
       TracyGpuZone("RadianceInjection");
 
@@ -434,8 +434,8 @@ LightPropagationVolumesData GlobalIllumination::_addRadiancePropagationPass(
       data.g = builder.write(data.g);
       data.b = builder.write(data.b);
     },
-    [=](const LightPropagationVolumesData &data,
-        FrameGraphPassResources &resources, void *ctx) {
+    [=, this](const LightPropagationVolumesData &data,
+              FrameGraphPassResources &resources, void *ctx) {
       NAMED_DEBUG_MARKER("RadiancePropagation");
       TracyGpuZone("RadiancePropagation");
 
