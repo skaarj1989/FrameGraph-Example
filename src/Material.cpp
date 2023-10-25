@@ -1,5 +1,3 @@
-#pragma once
-
 #include "Material.hpp"
 #include "Hash.hpp"
 
