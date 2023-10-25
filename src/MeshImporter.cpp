@@ -8,6 +8,8 @@
 
 #include <filesystem>
 #include <numeric> // accumulate
+#include <iterator>
+#include <format>
 #include <span>
 
 //

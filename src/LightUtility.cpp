@@ -7,9 +7,9 @@ float calculateLightRadius(const glm::vec3 &lightColor) {
   constexpr auto kQuadratic = 1.8f;
 
   return (-kLinear +
-          std::sqrtf(kLinear * kLinear -
-                     4.0f * kQuadratic *
-                       (kConstant - (256.0f / 5.0f) * max3(lightColor)))) /
+          std::sqrt(kLinear * kLinear -
+                    4.0f * kQuadratic *
+                      (kConstant - (256.0f / 5.0f) * max3(lightColor)))) /
          (2.0f * kQuadratic);
 }
 

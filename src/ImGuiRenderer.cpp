@@ -30,11 +30,6 @@ constexpr auto kClipOriginLowerLeft = true;
   // clang-format on
 }
 
-[[nodiscard]] inline auto getDrawLists(const ImDrawData *drawData) {
-  return std::span{drawData->CmdLists,
-                   static_cast<std::size_t>(drawData->CmdListsCount)};
-}
-
 } // namespace
 
 //
@@ -78,7 +73,7 @@ void ImGuiRenderer::draw(const ImDrawData *drawData) {
   if (drawData->TotalVtxCount > 0) _uploadGeometry(drawData);
 
   uint32_t globalVertexOffset{0}, globalIndexOffset{0};
-  for (const auto *cmdList : getDrawLists(drawData)) {
+  for (const auto *cmdList : drawData->CmdLists) {
     for (const auto &drawCmd : cmdList->CmdBuffer) {
       if (drawCmd.UserCallback != nullptr) {
         // User callback, registered via ImDrawList::AddCallback()
@@ -215,7 +210,7 @@ void ImGuiRenderer::_uploadGeometry(const ImDrawData *drawData) {
   TracyGpuZone("ImGuiRenderer::_uploadGeometry");
 
   auto vertexOffset = 0, indexOffset = 0;
-  for (auto *cmdList : getDrawLists(drawData)) {
+  for (auto *cmdList : drawData->CmdLists) {
     const auto verticesChunkSize = cmdList->VtxBuffer.Size * sizeof(ImDrawVert);
     m_renderContext.upload(m_vertexBuffer, vertexOffset, verticesChunkSize,
                            cmdList->VtxBuffer.Data);

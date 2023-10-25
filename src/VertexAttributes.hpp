@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <map>
+#include <functional> // hash
 
 struct VertexAttribute {
   enum class Type {

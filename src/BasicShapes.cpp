@@ -1,5 +1,6 @@
 #include "BasicShapes.hpp"
 #include "glm/gtc/constants.hpp"
+#include <cstring> // memcpy
 
 namespace {
 

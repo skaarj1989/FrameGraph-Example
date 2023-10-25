@@ -22,7 +22,7 @@
 
 namespace {
 
-const std::filesystem::path kAssetsDir{"../assets/"};
+const std::filesystem::path kAssetsDir{"./assets/"};
 
 void showMetricsOverlay() {
   const auto windowFlags =

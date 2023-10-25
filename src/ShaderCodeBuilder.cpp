@@ -9,7 +9,7 @@
 
 namespace {
 
-static const std::filesystem::path kShadersPath{"../shaders"};
+static const std::filesystem::path kShadersPath{"./shaders"};
 
 // https://stackoverflow.com/questions/26492513/write-c-regular-expression-to-match-a-include-preprocessing-directive
 // https://stackoverflow.com/questions/42139302/using-regex-to-filter-for-preprocessor-directives
@@ -48,10 +48,10 @@ void resolveInclusions(std::string &src,
   std::string temp{src};
   for (auto match = findIncludes(temp); match != std::sregex_iterator{};
        ++match) {
-    const auto lineLength = match->_At(0).length();
+    const auto lineLength = match->begin()->length();
     auto [filename, isRelative] = statInclude(*match);
     if (filename.empty()) {
-      SPDLOG_WARN("Ill-formed directive: {}", match->_At(0).str());
+      SPDLOG_WARN("Ill-formed directive: {}", match->begin()->str());
       src.erase(match->position() + offset, lineLength);
       offset -= lineLength;
       continue;

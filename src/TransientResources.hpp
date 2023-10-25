@@ -3,6 +3,7 @@
 #include "FrameGraphTexture.hpp"
 #include "FrameGraphBuffer.hpp"
 #include <memory>
+#include <vector>
 #include <unordered_map>
 
 class RenderContext;

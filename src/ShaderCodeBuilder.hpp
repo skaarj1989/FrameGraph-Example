@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <vector>
 #include <unordered_map>
 
 class ShaderCodeBuilder {
