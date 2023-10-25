@@ -143,10 +143,10 @@ void cameraController(PerspectiveCamera &camera, const ImVec2 &mouseDelta,
 } // namespace
 
 //
-// App class:
+// BaseApp class:
 //
 
-App::App(const Config &config) {
+BaseApp::BaseApp() {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -154,7 +154,17 @@ App::App(const Config &config) {
 #ifdef _DEBUG
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
+}
+BaseApp::~BaseApp() {
+  glfwDestroyWindow(m_window);
+  glfwTerminate();
+}
 
+//
+// App class:
+//
+
+App::App(const Config &config) {
   m_window = glfwCreateWindow(config.width, config.height,
                               config.caption.data(), nullptr, nullptr);
 
@@ -187,13 +197,7 @@ App::~App() {
   m_uiRenderer.reset();
   ImGui::DestroyContext();
 
-  m_basicShapes.reset();
-  m_renderer.reset();
   m_renderContext->destroy(m_skybox);
-  m_renderContext.reset();
-
-  glfwDestroyWindow(m_window);
-  glfwTerminate();
 }
 
 void App::run() {

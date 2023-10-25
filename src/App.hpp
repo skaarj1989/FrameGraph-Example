@@ -15,7 +15,16 @@ using fsec = std::chrono::duration<float>;
 
 struct GLFWwindow;
 
-class App {
+class BaseApp {
+public:
+  BaseApp();
+  virtual ~BaseApp();
+
+protected:
+  GLFWwindow *m_window{nullptr};
+};
+
+class App : private BaseApp {
 public:
   struct Config {
     const std::string_view caption;
@@ -27,7 +36,7 @@ public:
   explicit App(const Config &);
   App(const App &) = delete;
   App(App &&) noexcept = delete;
-  ~App();
+  ~App() override;
 
   App &operator=(const App &) = delete;
   App &operator=(App &&) noexcept = delete;
@@ -65,7 +74,6 @@ private:
   static void _onChar(GLFWwindow *, unsigned int c);
 
 private:
-  GLFWwindow *m_window{nullptr};
   bool m_mouseJustPressed[5]{false};
 
   std::unique_ptr<RenderContext> m_renderContext;
