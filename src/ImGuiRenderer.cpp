@@ -106,7 +106,7 @@ void ImGuiRenderer::draw(const ImDrawData *drawData) {
             },
         });
 
-        const auto texture = static_cast<Texture *>(drawCmd.TextureId);
+        const auto texture = reinterpret_cast<Texture *>(drawCmd.TextureId);
         if (texture != &m_font) m_renderContext.bindTexture(0, *texture);
 
         const auto indexOffset = globalIndexOffset + drawCmd.IdxOffset;
@@ -153,7 +153,7 @@ void ImGuiRenderer::_setupFont(ImFontAtlas &fonts) {
                            .pixels = pixels,
                          });
 
-  fonts.SetTexID(&m_font);
+  fonts.SetTexID(reinterpret_cast<ImTextureID>(&m_font));
 }
 void ImGuiRenderer::_setupPipeline() {
   const auto vao = m_renderContext.getVertexArray({
